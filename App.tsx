@@ -4,7 +4,7 @@ import NeoButton from './components/NeoButton';
 import { Level, Lesson, UserProgress, Quiz } from './types';
 import { generateCustomRoadmap, generateRankExam } from './services/geminiService';
 
-type ViewState = 'START' | 'AUTH' | 'ONBOARDING' | 'LOADING' | 'ROADMAP' | 'LESSON' | 'QUIZ' | 'PROFILE' | 'QUIZ_SUMMARY' | 'RANK_EXAM' | 'RANK_SUCCESS';
+type ViewState = 'START' | 'AUTH' | 'HOME' | 'ONBOARDING' | 'LOADING' | 'ROADMAP' | 'LESSON' | 'QUIZ' | 'PROFILE' | 'QUIZ_SUMMARY' | 'RANK_EXAM' | 'RANK_SUCCESS' | 'STORE' | 'SETTINGS';
 type Language = 'en' | 'te' | 'kn' | 'ml' | 'ta' | 'hi';
 
 interface Category {
@@ -19,6 +19,29 @@ interface Category {
     level3: string;
   };
 }
+
+interface StoreItem {
+  id: string;
+  name: string;
+  type: 'banner' | 'badge';
+  cost: number;
+  description: string;
+  value: string; // CSS class for banner, Emoji/Text for badge
+}
+
+const STORE_ITEMS: StoreItem[] = [
+  { id: 'banner_classic', name: 'Classic Green', type: 'banner', cost: 0, description: 'The standard look.', value: 'bg-[#90EE90]/20' },
+  { id: 'banner_fire', name: 'Inferno', type: 'banner', cost: 500, description: 'Blazing path.', value: 'bg-gradient-to-r from-red-500/20 to-yellow-500/20' },
+  { id: 'banner_ocean', name: 'Deep Ocean', type: 'banner', cost: 500, description: 'Calm waters.', value: 'bg-gradient-to-r from-blue-500/20 to-cyan-400/20' },
+  { id: 'banner_gold', name: 'Midas Touch', type: 'banner', cost: 1000, description: 'Pure luxury.', value: 'bg-gradient-to-r from-yellow-400/30 to-yellow-600/30' },
+  { id: 'banner_void', name: 'The Void', type: 'banner', cost: 2000, description: 'For the elite.', value: 'bg-black/10' },
+  
+  { id: 'badge_bull', name: 'Bull Market', type: 'badge', cost: 250, description: 'Optimistic!', value: '📈' },
+  { id: 'badge_bear', name: 'Bear Hug', type: 'badge', cost: 250, description: 'Safe & Sound.', value: '🐻' },
+  { id: 'badge_rich', name: 'Rich Cat', type: 'badge', cost: 500, description: 'Meow money.', value: '😼' },
+  { id: 'badge_diamond', name: 'Diamond Hands', type: 'badge', cost: 1000, description: 'Hold tight.', value: '💎' },
+  { id: 'badge_rocket', name: 'To The Moon', type: 'badge', cost: 1500, description: 'No limits.', value: '🚀' },
+];
 
 const LOCALIZED_CONTENT = {
   en: {
@@ -255,7 +278,7 @@ const LOCALIZED_CONTENT = {
       },
       { 
         id: 'digital-payments', 
-        title: '3. ഡിജിറ്റൽ പേയ്മെന്റുകൾ', 
+        title: '3. ഡിಜಿറ്റൽ പേയ്മെന്റുകൾ', 
         description: 'ഭയമില്ലാതെ ദൈനംദിന ഡിജിറ്റൽ പണ ഉപയോഗം. UPI-യും സുരക്ഷിതമായ കൈമാറ്റങ്ങളും പഠിക്കുക.',
         topics: {
           level1: "3.1 യുപിഐ എങ്ങനെ പ്രവർത്തിക്കുന്നു",
@@ -463,6 +486,7 @@ const TRANSLATIONS = {
     password: 'PASSWORD',
     paths: 'PATHS',
     profile: 'PROFILE',
+    store: 'STORE',
     choosePath: 'CHOOSE YOUR PATH',
     pathDesc: 'Master all paths to unlock the Rank Up Exam and advance to the next level.',
     progress: 'RANK PROGRESS',
@@ -495,14 +519,19 @@ const TRANSLATIONS = {
     rankUpReady: "RANK UP EXAM UNLOCKED",
     takeExam: "TAKE EXAM",
     examDesc: "Prove your mastery to advance to the next rank.",
+    buy: "BUY",
+    equip: "EQUIP",
+    equipped: "EQUIPPED",
+    owned: "OWNED",
+    cost: "COST",
+    commandCenter: "COMMAND CENTER",
     easy: 'EASY', medium: 'MEDIUM', hard: 'HARD'
   },
-  // Add other language translations for new keys as needed (fallback to English for now)
-  te: { start: 'కొనసాగండి', login: 'లాగిన్', signup: 'సైన్ అప్', enter: 'ప్రవేశించండి', join: 'చేరండి', username: 'యూజర్ పేరు', password: 'పాస్‌వర్డ్', paths: 'మార్గాలు', profile: 'ప్రొఫైల్', choosePath: 'మీ మార్గాన్ని ఎంచుకోండి', pathDesc: 'అన్ని మార్గాలను పూర్తి చేసి తదుపరి ర్యాంక్‌కు వెళ్లండి.', progress: 'ర్యాంక్ పురోగతి', completed: 'పూర్తయింది', mastered: 'నైపుణ్యం', locked: 'లాక్ చేయబడింది', begin: 'ప్రారంభించండి', retreat: 'వెనుకకు', submit: 'సమర్పించండి', continue: 'కొనసాగించండి', backRoadmap: 'తిరిగి వెళ్ళు', reread: 'మళ్ళీ చదవండి', passed: 'ఉత్తీర్ణులయ్యారు', failed: 'విఫలమయ్యారు', xpGranted: 'XP పొందారు', tryAgain: 'మళ్ళీ ప్రయత్నించండి', level: 'ర్యాంక్', settings: 'అమరికలు', language: 'భాష', notifications: 'నోటిఫికేషన్లు', account: 'ఖాతా', resources: 'వనరులు', signupCta: "ఖాతా లేదా?", loginCta: "సభ్యులేనా?", welcome: "స్వాగతం", newHere: "కొత్తవారా?", createAccount: "ఖాతా సృష్టించు", backToLogin: "లాగిన్", pathBonus: "పూర్తయింది! +500 XP", rankUpReady: "ర్యాంక్ పరీక్ష సిద్ధంగా ఉంది", takeExam: "పరీక్ష రాయండి", examDesc: "మీ నైపుణ్యాన్ని నిరూపించుకోండి.", easy: 'సులభం', medium: 'మధ్యస్థం', hard: 'కఠినం' },
-  kn: { start: 'ಮುಂದುವರಿಯಿರಿ', login: 'ಲಾಗಿನ್', signup: 'ಸೈನ್ ಅಪ್', enter: 'ಪ್ರವೇಶಿಸಿ', join: 'ಸೇರಿ', username: 'ಬಳಕೆದಾರ ಹೆಸರು', password: 'ಪಾಸ್‌ವರ್ಡ್', paths: 'ಮಾರ್ಗಗಳು', profile: 'ಪ್ರೊಫೈಲ್', choosePath: 'ನಿಮ್ಮ ದಾರಿಯನ್ನು ಆರಿಸಿ', pathDesc: 'ಮುಂದಿನ ಹಂತಕ್ಕೆ ಹೋಗಲು ಎಲ್ಲಾ ಮಾರ್ಗಗಳನ್ನು ಪೂರ್ಣಗೊಳಿಸಿ.', progress: 'ಶ್ರೇಣಿ ಪ್ರಗತಿ', completed: 'ಪೂರ್ಣಗೊಂಡಿದೆ', mastered: 'ಕರಗತವಾಗಿದೆ', locked: 'ಲಾಕ್ ಆಗಿದೆ', begin: 'ಪ್ರಾರಂಭಿಸಿ', retreat: 'ಹಿಂದೆ', submit: 'ಸಲ್ಲಿಸಿ', continue: 'ಮುಂದುವರಿಸಿ', backRoadmap: 'ಹಿಂದಕ್ಕೆ', reread: 'ಮತ್ತೊಮ್ಮೆ ಓದಿ', passed: 'ಪಾಸಾಗಿದೆ', failed: 'ವಿಫಲವಾಗಿದೆ', xpGranted: 'XP ಲಭಿಸಿದೆ', tryAgain: 'ಮತ್ತೊಮ್ಮೆ ಪ್ರಯತ್ನಿಸಿ', level: 'ಹಂತ', settings: 'ಸೆಟ್ಟಿಂಗ್‌ಗಳು', language: 'ಭಾಷೆ', notifications: 'ಸೂಚನೆಗಳು', account: 'ಖಾತೆ', resources: 'ಸಂಪನ್ಮೂಲಗಳು', signupCta: "ಖಾತೆ ಇಲ್ಲವೇ?", loginCta: "ಈಗಾಗಲೇ ಸದಸ್ಯರೇ?", welcome: "ಸ್ವಾಗತ", newHere: "ಹೊಸಬರೇ?", createAccount: "ಖಾತೆ ತೆರೆಯಿರಿ", backToLogin: "ಲಾಗಿನ್", pathBonus: "ಪೂರ್ಣಗೊಂಡಿದೆ! +500 XP", rankUpReady: "ಶ್ರೇಣಿ ಪರೀಕ್ಷೆ ಅನ್‌ಲಾಕ್ ಆಗಿದೆ", takeExam: "ಪರೀಕ್ಷೆ ತೆಗೆದುಕೊ", examDesc: "ಮುಂದಿನ ಹಂತಕ್ಕೆ ಹೋಗಲು ಪರೀಕ್ಷೆ ಬರೆಯಿರಿ.", easy: 'ಸುಲಭ', medium: 'ಮಧ್ಯಮ', hard: 'ಕಠಿಣ' },
-  ml: { start: 'തുടരുക', login: 'ലോഗിൻ', signup: 'സൈൻ അപ്പ്', enter: 'പ്രവേശിക്കുക', join: 'ചേരുക', username: 'ഉപയോക്തൃനാമം', password: 'പാസ്‌വേഡ്', paths: 'വഴികൾ', profile: 'പ്രൊഫൈൽ', choosePath: 'നിങ്ങളുടെ വഴി തിരഞ്ഞെടുക്കുക', pathDesc: 'അടുത്ത റാങ്കിലേക്ക് പോകാൻ എല്ലാ വഴികളും പൂർത്തിയാക്കുക.', progress: 'റാങ്ക് പുരോഗതി', completed: 'പൂർത്തിയായി', mastered: 'നേടി', locked: 'ലോക്ക് ചെയ്തു', begin: 'തുടങ്ങുക', retreat: 'പിന്നോട്ട്', submit: 'സമർപ്പിക്കുക', continue: 'തുടരുക', backRoadmap: 'തിരികെ', reread: 'വീണ്ടും വായിക്കുക', passed: 'വിജയിച്ചു', failed: 'പരാജയപ്പെട്ടു', xpGranted: 'XP ലഭിച്ചു', tryAgain: 'വീണ്ടും ശ്രമിക്കുക', level: 'റാങ്ക്', settings: 'ക്രമീകരണങ്ങൾ', language: 'ഭാഷ', notifications: 'അറിയിപ്പുകൾ', account: 'അക്കൗണ്ട്', resources: 'വിഭവങ്ങൾ', signupCta: "അക്കൗണ്ട് ഇല്ലേ?", loginCta: "അംഗമാണോ?", welcome: "സ്വാഗതം", newHere: "പുതിയ ആളാണോ?", createAccount: "അക്കൗണ്ട് ഉണ്ടാക്കുക", backToLogin: "ലോഗിൻ", pathBonus: "പൂർത്തിയായി! +500 XP", rankUpReady: "റാങ്ക് പരീക്ഷ തയ്യാറാണ്", takeExam: "പരീക്ഷ എഴുതുക", examDesc: "അടുത്ത റാങ്കിലേക്ക് പോകാൻ യോഗ്യത തെളിയിക്കുക.", easy: 'ലളിതം', medium: 'ഇടത്തരം', hard: 'കഠിനം' },
-  ta: { start: 'தொடரவும்', login: 'உள்நுழைக', signup: 'பதிவு', enter: 'உள்ளிடவும்', join: 'சேரவும்', username: 'பயனர்பெயர்', password: 'கடவுச்சொல்', paths: 'வழிகள்', profile: 'சுயவிவரம்', choosePath: 'உங்கள் வழியைத் தேர்வுசெய்க', pathDesc: 'அடுத்த நிலைக்குச் செல்ல அனைத்து வழிகளையும் முடிக்கவும்.', progress: 'தர முன்னேற்றம்', completed: 'முடிந்தது', mastered: 'தேர்ச்சி', locked: 'பூட்டப்பட்டது', begin: 'தொடங்கவும்', retreat: 'பின்வாங்கு', submit: 'சமர்ப்பிக்கவும்', continue: 'தொடரவும்', backRoadmap: 'திரும்பிச் செல்', reread: 'மீண்டும் படி', passed: 'தேர்ச்சி', failed: 'தோல்வி', xpGranted: 'XP வழங்கப்பட்டது', tryAgain: 'மீண்டும் முயற்சிக்கவும்', level: 'தரம்', settings: 'அமைப்புகள்', language: 'மொழி', notifications: 'அறிவிப்புகள்', account: 'கணக்கு', resources: 'வளங்கள்', signupCta: "கணக்கு இல்லையா?", loginCta: "ஏற்கனவே உறுப்பினரா?", welcome: "வரவேற்பு", newHere: "புதியவரா?", createAccount: "கணக்கை உருவாக்கு", backToLogin: "உள்நுழைக", pathBonus: "முடிந்தது! +500 XP", rankUpReady: "தேர்வு தயார்", takeExam: "தேர்வை எழுதுங்கள்", examDesc: "அடுத்த நிலைக்குச் செல்ல உங்கள் திறமையை நிரூபிக்கவும்.", easy: 'எளிது', medium: 'நடுத்தரம்', hard: 'கடினம்' },
-  hi: { start: 'आगे बढ़ें', login: 'लॉग इन', signup: 'साइन अप', enter: 'प्रवेश करें', join: 'शामिल हों', username: 'यूज़रनेम', password: 'पासवर्ड', paths: 'रास्ते', profile: 'प्रोफ़ाइल', choosePath: 'अपना रास्ता चुनें', pathDesc: 'अगले रैंक पर जाने के लिए सभी रास्ते पूरे करें।', progress: 'रैंक प्रगति', completed: 'पूरा हुआ', mastered: 'महारत हासिल', locked: 'बंद है', begin: 'ट्रायल शुरू करें', retreat: 'पीछे हटें', submit: 'उत्तर जमा करें', continue: 'जारी रखें', backRoadmap: 'वापस जाएं', reread: 'फिर से पढ़ें', passed: 'पास', failed: 'फेल', xpGranted: 'XP मिला', tryAgain: 'फिर से कोशिश करें', level: 'रैंक', settings: 'सेटिंग्स', language: 'भाषा', notifications: 'सूचनाएं', account: 'खाता', resources: 'संसाधन', signupCta: "खाता नहीं है?", loginCta: "पहले से सदस्य हैं?", welcome: "स्वागत है", newHere: "नए हैं?", createAccount: "खाता बनाएं", backToLogin: "लॉग इन", pathBonus: "पथ पूरा हुआ! +500 XP", rankUpReady: "रैंक परीक्षा अनलॉक", takeExam: "परीक्षा दें", examDesc: "अगले रैंक पर जाने के लिए परीक्षा पास करें।", easy: 'आसान', medium: 'मध्यम', hard: 'कठिन' }
+  te: { start: 'కొనసాగండి', login: 'లాగిన్', signup: 'సైన్ అప్', enter: 'ప్రవేశించండి', join: 'చేరండి', username: 'యూజర్ పేరు', password: 'పాస్‌వర్డ్', paths: 'మార్గాలు', profile: 'ప్రొఫైల్', store: 'స్టోర్', choosePath: 'మీ మార్గాన్ని ఎంచుకోండి', pathDesc: 'అన్ని మార్గాలను పూర్తి చేసి తదుపరి ర్యాంక్‌కు వెళ్లండి.', progress: 'ర్యాంక్ పురోగతి', completed: 'పూర్తయింది', mastered: 'నైపుణ్యం', locked: 'లాక్ చేయబడింది', begin: 'ప్రారంభించండి', retreat: 'వెనుకకు', submit: 'సమర్పించండి', continue: 'కొనసాగించండి', backRoadmap: 'తిరిగి వెళ్ళు', reread: 'మళ్ళీ చదవండి', passed: 'ఉత్తీర్ణులయ్యారు', failed: 'విఫలమయ్యారు', xpGranted: 'XP పొందారు', tryAgain: 'మళ్ళీ ప్రయత్నించండి', level: 'ర్యాంక్', settings: 'అమరికలు', language: 'భాష', notifications: 'నోటిఫికేషన్లు', account: 'ఖాతా', resources: 'వనరులు', signupCta: "ఖాతా లేదా?", loginCta: "సభ్యులేనా?", welcome: "స్వాగతం", newHere: "కొత్తవారా?", createAccount: "ఖాతా సృష్టించు", backToLogin: "లాగిన్", pathBonus: "పూర్తయింది! +500 XP", rankUpReady: "ర్యాంక్ పరీక్ష సిద్ధంగా ఉంది", takeExam: "పరీక్ష రాయండి", examDesc: "మీ నైపుణ్యాన్ని నిరూపించుకోండి.", buy: "కొనుగోలు", equip: "ధరించండి", equipped: "ధరించారు", owned: "స్వంతం", cost: "ధర", commandCenter: "కమాండ్ సెంటర్", easy: 'సులభం', medium: 'మధ్యస్థం', hard: 'కఠినం' },
+  kn: { start: 'ಮುಂದುವರಿಯಿರಿ', login: 'ಲಾಗಿನ್', signup: 'ಸೈನ್ ಅಪ್', enter: 'ಪ್ರವೇಶಿಸಿ', join: 'ಸೇರಿ', username: 'ಬಳಕೆದಾರ ಹೆಸರು', password: 'ಪಾಸ್‌ವರ್ಡ್', paths: 'ಮಾರ್ಗಗಳು', profile: 'ಪ್ರೊಫೈಲ್', store: 'ಅಂಗಡಿ', choosePath: 'ನಿಮ್ಮ ದಾರಿಯನ್ನು ಆರಿಸಿ', pathDesc: 'ಮುಂದಿನ ಹಂತಕ್ಕೆ ಹೋಗಲು ಎಲ್ಲಾ ಮಾರ್ಗಗಳನ್ನು ಪೂರ್ಣಗೊಳಿಸಿ.', progress: 'ಶ್ರೇಣಿ ಪ್ರಗತಿ', completed: 'ಪೂರ್ಣಗೊಂಡಿದೆ', mastered: 'ಕರಗತವಾಗಿದೆ', locked: 'ಲಾಕ್ ಆಗಿದೆ', begin: 'ಪ್ರಾರಂಭಿಸಿ', retreat: 'ಹಿಂದೆ', submit: 'ಸಲ್ಲಿಸಿ', continue: 'ಮುಂದುವರಿಸಿ', backRoadmap: 'ಹಿಂದಕ್ಕೆ', reread: 'ಮತ್ತೊಮ್ಮೆ ಓದಿ', passed: 'ಪಾಸಾಗಿದೆ', failed: 'ವಿಫಲವಾಗಿದೆ', xpGranted: 'XP ಲಭಿಸಿದೆ', tryAgain: 'ಮತ್ತೊಮ್ಮೆ ಪ್ರಯತ್ನಿಸಿ', level: 'ಹಂತ', settings: 'ಸೆಟ್ಟಿಂಗ್‌ಗಳು', language: 'ಭಾಷೆ', notifications: 'ಸೂಚನೆಗಳು', account: 'ಖಾತೆ', resources: 'ಸಂಪನ್ಮೂಲಗಳು', signupCta: "ಖಾತೆ ಇಲ್ಲವೇ?", loginCta: "ಈಗಾಗಲೇ ಸದಸ್ಯರೇ?", welcome: "ಸ್ವಾಗತ", newHere: "ಹೊಸಬರೇ?", createAccount: "ಖಾತೆ ತೆರೆಯಿರಿ", backToLogin: "ಲಾಗಿನ್", pathBonus: "ಪೂರ್ಣಗೊಂಡಿದೆ! +500 XP", rankUpReady: "ಶ್ರೇಣಿ ಪರೀಕ್ಷೆ ಅನ್‌ಲಾಕ್ ಆಗಿದೆ", takeExam: "ಪರೀಕ್ಷೆ ತೆಗೆದುಕೊ", examDesc: "ಮುಂದಿನ ಹಂತಕ್ಕೆ ಹೋಗಲು ಪರೀಕ್ಷೆ ಬರೆಯಿರಿ.", buy: "ಖರೀದಿಸಿ", equip: "ಬಳಸಿ", equipped: "ಬಳಸಲಾಗಿದೆ", owned: "ಸ್ವಂತ", cost: "ಬೆಲೆ", commandCenter: "ಕಮಾಂಡ್ ಸೆಂಟರ್", easy: 'ಸುಲಭ', medium: 'ಮಧ್ಯಮ', hard: 'ಕಠಿಣ' },
+  ml: { start: 'തുടരുക', login: 'ലോഗിൻ', signup: 'സൈൻ അപ്പ്', enter: 'പ്രവേശിക്കുക', join: 'ചേരുക', username: 'ഉപയോക്തൃനാമം', password: 'പാസ്‌വേഡ്', paths: 'വഴികൾ', profile: 'പ്രൊഫൈൽ', store: 'സ്റ്റോർ', choosePath: 'നിങ്ങളുടെ വഴി തിരഞ്ഞെടുക്കുക', pathDesc: 'അടുത്ത റാങ്കിലേക്ക് പോകാൻ എല്ലാ വഴികളും പൂർത്തിയാക്കുക.', progress: 'റാങ്ക് പുരോഗതി', completed: 'പൂർത്തിയായി', mastered: 'നേടി', locked: 'ലോക്ക് ചെയ്തു', begin: 'തുടങ്ങുക', retreat: 'പിന്നോട്ട്', submit: 'സമർപ്പിക്കുക', continue: 'തുടരുക', backRoadmap: 'തിരികെ', reread: 'വീണ്ടും വായിക്കുക', passed: 'വിജയിച്ചു', failed: 'പരാജയപ്പെട്ടു', xpGranted: 'XP ലഭിച്ചു', tryAgain: 'വീണ്ടും ശ്രമിക്കുക', level: 'റാങ്ക്', settings: 'ക്രമീകരണങ്ങൾ', language: 'ഭാഷ', notifications: 'അറിയിപ്പുകൾ', account: 'അക്കൗണ്ട്', resources: 'വിഭവങ്ങൾ', signupCta: "അക്കൗണ്ട് ഇല്ലേ?", loginCta: "അംഗമാണോ?", welcome: "സ്വാഗതം", newHere: "പുതിയ ആളാണോ?", createAccount: "അക്കൗണ്ട് ഉണ്ടാക്കുക", backToLogin: "ലോഗിൻ", pathBonus: "പൂർത്തിയായി! +500 XP", rankUpReady: "റാങ്ക് പരീക്ഷ തയ്യാറാണ്", takeExam: "പരീക്ഷ എഴുതുക", examDesc: "അടുത്ത റാങ്കിലേക്ക് പോകാൻ യോഗ്യത തെളിയിക്കുക.", buy: "വാങ്ങുക", equip: "ഉപയോഗിക്കുക", equipped: "ഉപയോഗിക്കുന്നു", owned: "സ്വന്തം", cost: "വില", commandCenter: "കമാൻഡ് സെന്റർ", easy: 'ലളിതം', medium: 'ഇടത്തരം', hard: 'കഠിനം' },
+  ta: { start: 'தொடரவும்', login: 'உள்நுழைக', signup: 'பதிவு', enter: 'உள்ளிடவும்', join: 'சேரவும்', username: 'பயனர்பெயர்', password: 'கடவுச்சொல்', paths: 'வழிகள்', profile: 'சுயவிவரம்', store: 'கடை', choosePath: 'உங்கள் வழியைத் தேர்வுசெய்க', pathDesc: 'அடுத்த நிலைக்குச் செல்ல அனைத்து வழிகளையும் முடிக்கவும்.', progress: 'தர முன்னேற்றம்', completed: 'முடிந்தது', mastered: 'தேர்ச்சி', locked: 'பூட்டப்பட்டது', begin: 'தொடங்கவும்', retreat: 'பின்வாங்கு', submit: 'சமர்ப்பிக்கவும்', continue: 'தொடரவும்', backRoadmap: 'திரும்பிச் செல்', reread: 'மீண்டும் படி', passed: 'தேர்ச்சி', failed: 'தோல்வி', xpGranted: 'XP வழங்கப்பட்டது', tryAgain: 'மீண்டும் முயற்சிக்கவும்', level: 'தரம்', settings: 'அமைப்புகள்', language: 'மொழி', notifications: 'அறிவிப்புகள்', account: 'கணக்கு', resources: 'வளங்கள்', signupCta: "கணக்கு இல்லையா?", loginCta: "ஏற்கனவே உறுப்பினரா?", welcome: "வரவேற்பு", newHere: "புதியவரா?", createAccount: "கணக்கை உருவாக்கு", backToLogin: "உள்நுழைக", pathBonus: "முடிந்தது! +500 XP", rankUpReady: "தேர்வு தயார்", takeExam: "தேர்வை எழுதுங்கள்", examDesc: "அடுத்த நிலைக்குச் செல்ல உங்கள் திறமையை நிரூபிக்கவும்.", buy: "வாங்க", equip: "பயன்படுத்து", equipped: "பயன்பாட்டில்", owned: "சொந்தம்", cost: "விலை", commandCenter: "கட்டளை மையம்", easy: 'எளிது', medium: 'நடுத்தரம்', hard: 'கடினம்' },
+  hi: { start: 'आगे बढ़ें', login: 'लॉग इन', signup: 'साइन अप', enter: 'प्रवेश करें', join: 'शामिल हों', username: 'यूज़रनेम', password: 'पासवर्ड', paths: 'रास्ते', profile: 'प्रोफ़ाइल', store: 'स्टोर', choosePath: 'अपना रास्ता चुनें', pathDesc: 'अगले रैंक पर जाने के लिए सभी रास्ते पूरे करें।', progress: 'रैंक प्रगति', completed: 'पूरा हुआ', mastered: 'महारत हासिल', locked: 'बंद है', begin: 'ट्रायल शुरू करें', retreat: 'पीछे हटें', submit: 'उत्तर जमा करें', continue: 'जारी रखें', backRoadmap: 'वापस जाएं', reread: 'फिर से पढ़ें', passed: 'पास', failed: 'फेल', xpGranted: 'XP मिला', tryAgain: 'फिर से कोशिश करें', level: 'रैंक', settings: 'सेटिंग्स', language: 'भाषा', notifications: 'सूचनाएं', account: 'खाता', resources: 'संसाधन', signupCta: "खाता नहीं है?", loginCta: "पहले से सदस्य हैं?", welcome: "स्वागत है", newHere: "नए हैं?", createAccount: "खाता बनाएं", backToLogin: "लॉग इन", pathBonus: "पथ पूरा हुआ! +500 XP", rankUpReady: "रैंक परीक्षा अनलॉक", takeExam: "परीक्षा दें", examDesc: "अगले रैंक पर जाने के लिए परीक्षा पास करें।", buy: "खरीदें", equip: "इस्तेमाल करें", equipped: "इस्तेमाल में", owned: "स्वामित्व", cost: "लागत", commandCenter: "कमांड सेंटर", easy: 'आसान', medium: 'मध्यम', hard: 'कठिन' }
 };
 
 const GeminiStar: React.FC<{ style: React.CSSProperties }> = ({ style }) => (
@@ -604,7 +633,6 @@ const App: React.FC = () => {
   const [password, setPassword] = useState('');
   const [displayPassword, setDisplayPassword] = useState('');
   const [maskTimeout, setMaskTimeout] = useState<any | null>(null);
-  const [settingsOpen, setSettingsOpen] = useState(false);
 
   const [roadmap, setRoadmap] = useState<Level[]>([]);
   const [currentCategory, setCurrentCategory] = useState('');
@@ -618,7 +646,9 @@ const App: React.FC = () => {
     completedCategoriesForCurrentRank: [],
     completedRoadmapTitles: [],
     categoryProgress: {},
-    language: 'en'
+    language: 'en',
+    inventory: ['banner_classic'],
+    equippedBanner: 'banner_classic'
   });
 
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
@@ -685,13 +715,17 @@ const App: React.FC = () => {
     setView('AUTH');
   };
 
-  const handleHome = () => {
+  const goToPaths = () => {
     setView('ONBOARDING');
     setCurrentCategory('');
     setRoadmap(defaultLevels);
     setActiveLesson(null);
     setSelectedOption(null);
   };
+  
+  const goToHub = () => {
+     setView('HOME');
+  }
 
   // Rank Progress Calculation (Paths Completed / Total Paths)
   const rankCompletionPercentage = Math.round((progress.completedCategoriesForCurrentRank.length / categories.length) * 100);
@@ -722,7 +756,7 @@ const App: React.FC = () => {
 
   const handleAuth = (e: React.FormEvent) => {
     e.preventDefault();
-    if (username.trim() && password.trim()) setView('ONBOARDING');
+    if (username.trim() && password.trim()) setView('HOME');
   };
 
   const handleSelectCategory = async (cat: Category) => {
@@ -736,10 +770,22 @@ const App: React.FC = () => {
         generateCustomRoadmap(cat.title, cat.difficulty, cat.topics, progress.language, currentRankName),
         minLoadTime
       ]);
-      if (customRoadmap && customRoadmap.length > 0) setRoadmap(customRoadmap);
+      
+      if (customRoadmap && customRoadmap.length > 0) {
+        // BUG FIX: Ensure lesson IDs are unique to the current rank + category
+        // This prevents the system from thinking a lesson is complete just because ID matches "lesson_1" from a previous rank
+        const uniqueRoadmap = customRoadmap.map(level => ({
+          ...level,
+          lessons: level.lessons.map(lesson => ({
+            ...lesson,
+            id: `${progress.rankIndex}_${cat.id}_${lesson.id}` 
+          }))
+        }));
+        setRoadmap(uniqueRoadmap);
+      }
       setView('ROADMAP');
     } catch (e) {
-      setView('ONBOARDING');
+      goToPaths();
     }
   };
 
@@ -770,6 +816,25 @@ const App: React.FC = () => {
     setView('QUIZ_SUMMARY');
   };
 
+  const handleBuyItem = (item: StoreItem) => {
+    if (progress.xp >= item.cost && !progress.inventory.includes(item.id)) {
+      setProgress(prev => ({
+        ...prev,
+        xp: prev.xp - item.cost,
+        inventory: [...(prev.inventory || []), item.id]
+      }));
+    }
+  };
+
+  const handleEquipItem = (item: StoreItem) => {
+    if (item.type === 'banner') {
+      setProgress(prev => ({
+        ...prev,
+        equippedBanner: item.id
+      }));
+    }
+  };
+
   const startRankExam = async () => {
     setView('LOADING');
     try {
@@ -781,10 +846,10 @@ const App: React.FC = () => {
         setView('RANK_EXAM');
       } else {
         // Fallback or error
-        setView('ONBOARDING');
+        goToPaths();
       }
     } catch(e) {
-      setView('ONBOARDING');
+      goToPaths();
     }
   };
 
@@ -824,7 +889,7 @@ const App: React.FC = () => {
   const NavHeader = () => (
     <div className="flex justify-between items-center mb-12 border-b-2 border-black pb-4">
       <div className="flex items-center gap-4">
-        <button onClick={handleHome} className="text-2xl font-arcane title-main">FINQUEST</button>
+        <button onClick={goToHub} className="text-2xl font-arcane title-main hover:scale-105 transition-transform active:scale-95">FINQUEST</button>
         <div className="hidden lg:flex items-center gap-2">
           <div className="bg-black text-[#90EE90] px-3 py-1 border-2 border-black neo-shadow font-black uppercase text-xs">
              {t.level}: {currentRankName}
@@ -840,9 +905,10 @@ const App: React.FC = () => {
         </div>
       </div>
       <div className="flex gap-3 items-center">
-        <button onClick={() => setIsMuted(!isMuted)} className="p-2 border-2 border-black neo-shadow bg-white">{isMuted ? '🔈' : '🔊'}</button>
-        <NeoButton variant="secondary" onClick={handleHome} className="text-xs py-1.5 px-3">{t.paths}</NeoButton>
-        <NeoButton variant="secondary" onClick={() => setView('PROFILE')} className="text-xs py-1.5 px-3">{t.profile}</NeoButton>
+        <button onClick={() => setIsMuted(!isMuted)} className="p-2 border-2 border-black neo-shadow bg-white hover:bg-gray-100 transition-colors">{isMuted ? '🔈' : '🔊'}</button>
+        <NeoButton variant="secondary" onClick={() => setView('STORE')} className="text-xs py-1.5 px-3">{t.store}</NeoButton>
+        <NeoButton variant="secondary" onClick={() => setView('ONBOARDING')} className="text-xs py-1.5 px-3">{t.paths}</NeoButton>
+        <NeoButton variant="secondary" onClick={() => setView('SETTINGS')} className="text-xs py-1.5 px-3">{t.settings}</NeoButton>
       </div>
     </div>
   );
@@ -862,7 +928,6 @@ const App: React.FC = () => {
       case 'AUTH':
         return (
           <div className="min-h-screen flex flex-col items-center justify-center p-4 fade-in">
-             {/* Same Auth UI as before */}
              <div className="w-full max-w-4xl grid grid-cols-1 md:grid-cols-2 gap-0 border-2 border-black neo-shadow-lg bg-white">
               <div className="p-8 md:p-12 flex flex-col justify-center border-b-2 md:border-b-0 md:border-r-2 border-black">
                 <h2 className="text-4xl font-arcane mb-8 uppercase text-left">{isLoginMode ? t.login : t.signup}</h2>
@@ -872,8 +937,26 @@ const App: React.FC = () => {
                   ))}
                 </div>
                 <form onSubmit={handleAuth} className="space-y-6">
-                  <div><label className="font-black uppercase text-xs mb-1 block">{t.username}</label><input type="text" value={username} onChange={e => setUsername(e.target.value)} className="w-full border-2 border-black p-3 font-bold" required /></div>
-                  <div><label className="font-black uppercase text-xs mb-1 block">{t.password}</label><input type="password" value={password} onChange={e => setPassword(e.target.value)} className="w-full border-2 border-black p-3 font-bold" required /></div>
+                  <div>
+                    <label className="font-black uppercase text-xs mb-1 block">{t.username}</label>
+                    <input 
+                      type="text" 
+                      value={username} 
+                      onChange={e => setUsername(e.target.value)} 
+                      className="w-full border-2 border-black p-3 font-bold bg-white focus:bg-[#e6ffe6] outline-none transition-colors duration-300" 
+                      required 
+                    />
+                  </div>
+                  <div>
+                    <label className="font-black uppercase text-xs mb-1 block">{t.password}</label>
+                    <input 
+                      type="password" 
+                      value={password} 
+                      onChange={e => setPassword(e.target.value)} 
+                      className="w-full border-2 border-black p-3 font-bold bg-white focus:bg-[#e6ffe6] outline-none transition-colors duration-300" 
+                      required 
+                    />
+                  </div>
                   <NeoButton type="submit" className="w-full py-4 text-xl mt-4">{isLoginMode ? t.enter : t.join} →</NeoButton>
                 </form>
               </div>
@@ -884,6 +967,76 @@ const App: React.FC = () => {
             </div>
           </div>
         );
+
+      case 'HOME':
+         return (
+          <div className="min-h-screen p-8 md:p-12 fade-in max-w-6xl mx-auto flex flex-col">
+             <NavHeader />
+             <div className="flex-grow flex flex-col items-center justify-center">
+                <h2 className="text-6xl md:text-8xl font-arcane mb-16 text-center title-main uppercase">{t.commandCenter || "COMMAND CENTER"}</h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full max-w-4xl">
+                   <button onClick={() => setView('ONBOARDING')} className="bg-white border-4 border-black p-12 neo-shadow hover:-translate-y-2 transition-all flex flex-col items-center gap-4 group">
+                      <span className="text-6xl group-hover:scale-110 transition-transform">🗺️</span>
+                      <span className="text-3xl font-black uppercase">{t.paths}</span>
+                   </button>
+                   <button onClick={() => setView('STORE')} className="bg-white border-4 border-black p-12 neo-shadow hover:-translate-y-2 transition-all flex flex-col items-center gap-4 group">
+                      <span className="text-6xl group-hover:scale-110 transition-transform">🛒</span>
+                      <span className="text-3xl font-black uppercase">{t.store}</span>
+                   </button>
+                   <button onClick={() => setView('PROFILE')} className="bg-white border-4 border-black p-12 neo-shadow hover:-translate-y-2 transition-all flex flex-col items-center gap-4 group">
+                      <span className="text-6xl group-hover:scale-110 transition-transform">👤</span>
+                      <span className="text-3xl font-black uppercase">{t.profile}</span>
+                   </button>
+                   <button onClick={() => setView('SETTINGS')} className="bg-white border-4 border-black p-12 neo-shadow hover:-translate-y-2 transition-all flex flex-col items-center gap-4 group">
+                      <span className="text-6xl group-hover:scale-110 transition-transform">⚙️</span>
+                      <span className="text-3xl font-black uppercase">{t.settings}</span>
+                   </button>
+                </div>
+             </div>
+          </div>
+         );
+
+      case 'SETTINGS':
+         return (
+            <div className="min-h-screen p-8 md:p-12 fade-in max-w-4xl mx-auto flex flex-col">
+              <NavHeader />
+              <div className="bg-white border-2 border-black p-8 md:p-12 neo-shadow-lg">
+                 <h2 className="text-5xl font-arcane mb-8 uppercase border-b-2 border-black pb-4">{t.settings}</h2>
+                 <div className="space-y-8">
+                    <div>
+                       <label className="block text-xl font-black uppercase mb-4">{t.language}</label>
+                       <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                          {['en', 'te', 'kn', 'ml', 'ta', 'hi'].map((l) => (
+                             <button 
+                                key={l}
+                                onClick={() => setProgress(p => ({...p, language: l as Language}))}
+                                className={`p-4 border-2 border-black font-bold uppercase transition-all ${progress.language === l ? 'bg-[#90EE90] neo-shadow' : 'bg-white hover:bg-gray-50'}`}
+                             >
+                                {l === 'en' ? 'English' : 
+                                 l === 'te' ? 'Telugu' :
+                                 l === 'kn' ? 'Kannada' :
+                                 l === 'ml' ? 'Malayalam' :
+                                 l === 'ta' ? 'Tamil' : 'Hindi'}
+                             </button>
+                          ))}
+                       </div>
+                    </div>
+                    
+                    <div className="flex items-center justify-between border-t-2 border-black pt-8">
+                       <label className="text-xl font-black uppercase">{t.notifications}</label>
+                       <button className="w-16 h-8 border-2 border-black bg-[#90EE90] rounded-full relative neo-shadow">
+                          <div className="absolute right-1 top-1 w-5 h-5 bg-black rounded-full"></div>
+                       </button>
+                    </div>
+
+                    <div className="border-t-2 border-black pt-8">
+                       <button onClick={() => setView('START')} className="text-red-500 font-black uppercase text-xl hover:underline">LOG OUT</button>
+                    </div>
+                 </div>
+                 <NeoButton onClick={goToHub} className="w-full mt-12 py-4 text-xl">BACK TO HUB →</NeoButton>
+              </div>
+            </div>
+         );
 
       case 'ONBOARDING':
         return (
@@ -941,6 +1094,68 @@ const App: React.FC = () => {
             </div>
           </div>
         );
+
+      case 'STORE':
+        return (
+          <div className="min-h-screen p-8 md:p-12 fade-in max-w-6xl mx-auto flex flex-col">
+            <NavHeader />
+            <div className="flex justify-between items-end mb-8 border-b-2 border-black pb-4">
+              <h2 className="text-5xl font-arcane uppercase title-main">{t.store}</h2>
+              <div className="text-right">
+                <span className="text-xs font-black uppercase block opacity-60">Your Balance</span>
+                <span className="text-4xl font-black text-[#90EE90] drop-shadow-[1px_1px_0_black]">{progress.xp} XP</span>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {STORE_ITEMS.map((item) => {
+                const isOwned = (progress.inventory || []).includes(item.id);
+                const isEquipped = progress.equippedBanner === item.id;
+                const canAfford = progress.xp >= item.cost;
+
+                return (
+                  <div key={item.id} className="bg-white border-2 border-black p-6 flex flex-col neo-shadow hover:-translate-y-1 transition-all">
+                    <div className={`h-24 w-full border-2 border-black mb-4 flex items-center justify-center overflow-hidden relative ${item.type === 'banner' ? item.value : 'bg-gray-50'}`}>
+                       {item.type === 'badge' && <span className="text-5xl">{item.value}</span>}
+                       {item.type === 'banner' && <span className="text-xs font-black uppercase bg-white px-2 border-2 border-black z-10">Preview</span>}
+                    </div>
+                    
+                    <div className="flex justify-between items-start mb-2">
+                       <h3 className="text-xl font-black uppercase">{item.name}</h3>
+                       <span className="text-xs font-bold bg-black text-white px-2 py-1 uppercase">{item.type}</span>
+                    </div>
+                    <p className="text-sm font-bold opacity-60 mb-6 flex-grow">{item.description}</p>
+                    
+                    <div className="mt-auto">
+                      {isOwned ? (
+                         item.type === 'banner' ? (
+                           <button 
+                             onClick={() => handleEquipItem(item)}
+                             disabled={isEquipped}
+                             className={`w-full py-3 border-2 border-black font-black uppercase transition-all ${isEquipped ? 'bg-[#90EE90] opacity-50 cursor-default' : 'bg-white hover:bg-gray-100'}`}
+                           >
+                             {isEquipped ? t.equipped : t.equip}
+                           </button>
+                         ) : (
+                           <div className="w-full py-3 border-2 border-black bg-gray-100 font-black uppercase text-center opacity-50 cursor-default">{t.owned}</div>
+                         )
+                      ) : (
+                        <button 
+                           onClick={() => handleBuyItem(item)}
+                           disabled={!canAfford}
+                           className={`w-full py-3 border-2 border-black font-black uppercase transition-all flex justify-between px-4 ${canAfford ? 'bg-yellow-300 hover:bg-yellow-400 neo-button' : 'bg-gray-200 opacity-50 cursor-not-allowed'}`}
+                        >
+                          <span>{t.buy}</span>
+                          <span>{item.cost} XP</span>
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        );
       
       case 'RANK_EXAM':
         const question = rankExamQuestions[currentExamQuestionIndex];
@@ -980,13 +1195,12 @@ const App: React.FC = () => {
                  <div className="text-lg font-bold mb-8 opacity-60">
                     Your path progress has been reset.<br/>New challenges await at this higher difficulty level.
                  </div>
-                 <NeoButton onClick={handleHome} className="text-2xl py-4 w-full">CONTINUE JOURNEY →</NeoButton>
+                 <NeoButton onClick={goToHub} className="text-2xl py-4 w-full">CONTINUE JOURNEY →</NeoButton>
               </div>
            </div>
         );
 
       case 'LOADING':
-         /* Existing Loading View */
          return (
           <div className="min-h-screen flex flex-col items-center justify-center p-4 fade-in bg-[#AFEEEE]">
             <div className="flex flex-col items-center gap-12 text-center max-w-md">
@@ -999,7 +1213,6 @@ const App: React.FC = () => {
           </div>
         );
 
-      /* Other cases (ROADMAP, LESSON, QUIZ, PROFILE, QUIZ_SUMMARY) remain largely same but ensure they use currentRankName logic */
       case 'ROADMAP':
          return (
           <div className={`min-h-screen p-8 md:p-12 fade-in max-w-4xl mx-auto transition-colors duration-300 ${isCurrentRoadmapComplete ? 'completed-theme' : ''}`}>
@@ -1008,7 +1221,7 @@ const App: React.FC = () => {
                  <div className="bg-[#90EE90] border-8 border-black p-12 neo-shadow-lg text-center rotate-[-2deg] fade-in max-w-lg">
                     <h2 className="text-6xl font-arcane mb-4 uppercase text-black">{t.mastered}</h2>
                     <p className="text-xl font-bold mb-2 text-black">{t.pathBonus}</p>
-                    <NeoButton onClick={handleHome} className="text-2xl py-4 mt-8">{t.choosePath} →</NeoButton>
+                    <NeoButton onClick={goToPaths} className="text-2xl py-4 mt-8">{t.choosePath} →</NeoButton>
                  </div>
               </div>
             )}
@@ -1114,10 +1327,18 @@ const App: React.FC = () => {
         );
         
       case 'PROFILE':
+        const currentBanner = STORE_ITEMS.find(i => i.id === progress.equippedBanner);
         return (
           <div className="min-h-screen p-8 md:p-12 fade-in max-w-4xl mx-auto flex flex-col">
             <NavHeader />
             <div className="bg-white border-2 border-black p-8 neo-shadow-lg">
+              {/* Profile Banner */}
+              <div className={`w-full h-32 border-2 border-black mb-8 relative overflow-hidden ${currentBanner ? currentBanner.value : 'bg-[#90EE90]/20'}`}>
+                 <div className="absolute bottom-2 left-4 bg-white border-2 border-black px-2 py-1 text-xs font-black uppercase z-10">
+                   {currentBanner ? currentBanner.name : 'Standard Banner'}
+                 </div>
+              </div>
+
               <h2 className="text-4xl font-arcane mb-8 uppercase border-b-2 border-black pb-4">{t.profile}</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
                 <div className="space-y-6">
@@ -1131,16 +1352,26 @@ const App: React.FC = () => {
                     <p className="mt-4 font-bold text-2xl">{progress.xp} XP</p>
                   </div>
                   <div className="border-2 border-black p-4 neo-shadow">
-                    <p className="text-xs font-black uppercase text-black/40 mb-3">Badges & Past Ranks</p>
+                    <p className="text-xs font-black uppercase text-black/40 mb-3">Badges & Inventory</p>
                     <div className="flex flex-wrap gap-3">
                       {progress.badges.length > 0 ? progress.badges.map((b, i) => (
                         <div key={i} className="bg-yellow-400 border-2 border-black p-2 neo-shadow font-bold text-xs uppercase flex items-center gap-2">🏅 {b}</div>
-                      )) : <p className="font-bold text-black/30">No badges yet.</p>}
+                      )) : null}
+                      {/* Show Bought Badges */}
+                      {(progress.inventory || []).filter(id => id.startsWith('badge')).map((badgeId, i) => {
+                         const item = STORE_ITEMS.find(it => it.id === badgeId);
+                         return item ? (
+                           <div key={`inv_${i}`} className="bg-white border-2 border-black p-2 neo-shadow font-bold text-xs uppercase flex items-center gap-2" title={item.name}>
+                             {item.value}
+                           </div>
+                         ) : null;
+                      })}
+                      {progress.badges.length === 0 && (!progress.inventory || !progress.inventory.some(i => i.startsWith('badge'))) && <p className="font-bold text-black/30">No badges yet.</p>}
                     </div>
                   </div>
                 </div>
               </div>
-              <NeoButton onClick={handleHome} className="w-full mt-12 py-4 text-xl">{t.backRoadmap} →</NeoButton>
+              <NeoButton onClick={goToHub} className="w-full mt-12 py-4 text-xl">BACK TO HUB →</NeoButton>
             </div>
           </div>
         );

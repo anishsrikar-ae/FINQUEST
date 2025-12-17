@@ -33,6 +33,8 @@ export interface UserProgress {
   rankIndex: number; // Index in the RANKS array
   completedCategoriesForCurrentRank: string[]; // List of category IDs completed for the CURRENT rank
   language: 'en' | 'te' | 'kn' | 'ml' | 'ta' | 'hi'; 
+  inventory: string[]; // IDs of items bought in store
+  equippedBanner: string | null; // ID of the currently equipped banner
 }
 
 export interface Transaction {
