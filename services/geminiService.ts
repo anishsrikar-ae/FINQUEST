@@ -1,6 +1,6 @@
 
 import { GoogleGenAI, Type } from "@google/genai";
-import { Transaction, FinancialAdvice, Level } from "../types";
+import { Transaction, FinancialAdvice, Level, Quiz } from "../types";
 
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
@@ -51,7 +51,8 @@ export const generateCustomRoadmap = async (
   categoryTitle: string, 
   difficulty: string, 
   topics: { level1: string, level2: string, level3: string },
-  language: string = 'en'
+  language: string = 'en',
+  userRank: string = 'Beginner I'
 ): Promise<Level[]> => {
   const langMap: Record<string, string> = {
     en: 'English',
@@ -65,19 +66,24 @@ export const generateCustomRoadmap = async (
 
   const prompt = `
     Create a highly structured financial learning roadmap for the category: "${categoryTitle}".
-    Difficulty: ${difficulty}.
+    Base Difficulty: ${difficulty}.
+    Current User Rank: ${userRank}.
     Language: ${targetLang}.
-    Curriculum structure to follow strictly:
+    
+    Curriculum structure to follow:
     - Level 1 Topic: ${topics.level1}
     - Level 2 Topic: ${topics.level2}
     - Level 3 Topic: ${topics.level3}
 
     Guidelines:
+    - IMPORTANT: Adjust the complexity of the content based on the User Rank ("${userRank}").
+      - If Rank is Beginner (I-III): Keep concepts simple, foundational, and easy to digest. Focus on 'What' and 'Why'.
+      - If Rank is Intermediate (I-III): Introduce 'How' in depth, nuance, exceptions, and optimization strategies.
+      - If Rank is Expert/Grandmaster: Focus on advanced leverage, complex instruments, tax-loss harvesting, hedging, and wealth preservation at scale.
     - Exactly 3 levels.
-    - Each level must have exactly 2 lessons (Lesson A: Introductory, Lesson B: Practical/Mistakes).
-    - Language: For Easy, use very simple terms. For Medium, use practical concepts. For Hard, use complex strategies.
+    - Each level must have exactly 2 lessons (Lesson A: Concept, Lesson B: Practical Application/Analysis).
     - Each lesson needs a title, content (3-4 sentences), a 4-option quiz with one correct index.
-    - IMPORTANT: Include 2 relevant educational resources (Articles, Videos, or Tools) for each lesson. The URL can be a google search query URL.
+    - IMPORTANT: Include 2 relevant educational resources (Articles, Videos, or Tools) for each lesson.
   `;
 
   const response = await ai.models.generateContent({
@@ -141,6 +147,55 @@ export const generateCustomRoadmap = async (
     return JSON.parse(jsonStr || "[]");
   } catch (e) {
     console.error("Failed to generate roadmap", e);
+    return [];
+  }
+};
+
+export const generateRankExam = async (currentRank: string, language: string): Promise<Quiz[]> => {
+  const langMap: Record<string, string> = {
+    en: 'English', 'te': 'Telugu', 'kn': 'Kannada', 'ml': 'Malayalam', 'ta': 'Tamil', 'hi': 'Hindi'
+  };
+  const targetLang = langMap[language] || 'English';
+
+  const prompt = `
+    Create a comprehensive 5-question Exam to test if a user is ready to graduate from rank "${currentRank}" in financial literacy.
+    Language: ${targetLang}.
+    
+    The questions should cover a mix of topics: Money Basics, Banking, Digital Payments, Investing, Loans, and Safety.
+    
+    Guidelines:
+    - Questions must be strictly appropriate for the difficulty of "${currentRank}".
+    - Return exactly 5 questions.
+    - Each question has 4 options and 1 correct index.
+  `;
+
+  const response = await ai.models.generateContent({
+    model: "gemini-3-flash-preview",
+    contents: prompt,
+    config: {
+      responseMimeType: "application/json",
+      responseSchema: {
+        type: Type.ARRAY,
+        items: {
+          type: Type.OBJECT,
+          properties: {
+            question: { type: Type.STRING },
+            options: {
+              type: Type.ARRAY,
+              items: { type: Type.STRING }
+            },
+            correct: { type: Type.INTEGER }
+          },
+          required: ["question", "options", "correct"]
+        }
+      },
+    },
+  });
+
+  const jsonStr = response.text?.trim();
+  try {
+    return JSON.parse(jsonStr || "[]");
+  } catch (e) {
     return [];
   }
 };

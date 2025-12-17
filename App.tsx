@@ -1,10 +1,10 @@
 
 import React, { useState, useMemo, memo, useEffect, useRef } from 'react';
 import NeoButton from './components/NeoButton';
-import { Level, Lesson, UserProgress } from './types';
-import { generateCustomRoadmap } from './services/geminiService';
+import { Level, Lesson, UserProgress, Quiz } from './types';
+import { generateCustomRoadmap, generateRankExam } from './services/geminiService';
 
-type ViewState = 'START' | 'AUTH' | 'ONBOARDING' | 'LOADING' | 'ROADMAP' | 'LESSON' | 'QUIZ' | 'PROFILE' | 'QUIZ_SUMMARY';
+type ViewState = 'START' | 'AUTH' | 'ONBOARDING' | 'LOADING' | 'ROADMAP' | 'LESSON' | 'QUIZ' | 'PROFILE' | 'QUIZ_SUMMARY' | 'RANK_EXAM' | 'RANK_SUCCESS';
 type Language = 'en' | 'te' | 'kn' | 'ml' | 'ta' | 'hi';
 
 interface Category {
@@ -464,9 +464,9 @@ const TRANSLATIONS = {
     paths: 'PATHS',
     profile: 'PROFILE',
     choosePath: 'CHOOSE YOUR PATH',
-    pathDesc: 'Master money basics to protection. Every quest grants XP and unique badges.',
-    progress: 'PROGRESS',
-    completed: 'COMPLETED',
+    pathDesc: 'Master all paths to unlock the Rank Up Exam and advance to the next level.',
+    progress: 'RANK PROGRESS',
+    completed: 'MASTERED',
     mastered: 'MASTERED',
     locked: 'LOCKED',
     begin: 'BEGIN TRIAL',
@@ -479,7 +479,7 @@ const TRANSLATIONS = {
     failed: 'TRIAL FAILED',
     xpGranted: 'XP GRANTED • KNOWLEDGE UNLOCKED',
     tryAgain: 'RETURN TO THE SCROLL AND TRY AGAIN',
-    level: 'LVL',
+    level: 'RANK',
     settings: 'SETTINGS',
     language: 'LANGUAGE',
     notifications: 'NOTIFICATIONS',
@@ -492,213 +492,17 @@ const TRANSLATIONS = {
     createAccount: "CREATE ACCOUNT",
     backToLogin: "BACK TO LOGIN",
     pathBonus: "PATH COMPLETED! +500 XP",
+    rankUpReady: "RANK UP EXAM UNLOCKED",
+    takeExam: "TAKE EXAM",
+    examDesc: "Prove your mastery to advance to the next rank.",
     easy: 'EASY', medium: 'MEDIUM', hard: 'HARD'
   },
-  te: {
-    start: 'కొనసాగండి',
-    login: 'లాగిన్',
-    signup: 'సైన్ అప్',
-    enter: 'ప్రవేశించండి',
-    join: 'చేరండి',
-    username: 'యూజర్ పేరు',
-    password: 'పాస్‌వర్డ్',
-    paths: 'మార్గాలు',
-    profile: 'ప్రొఫైల్',
-    choosePath: 'మీ మార్గాన్ని ఎంచుకోండి',
-    pathDesc: 'ఆర్థిక అంశాలను నేర్చుకోండి. ప్రతి అన్వేషణ XP మరియు బ్యాడ్జ్‌లను ఇస్తుంది.',
-    progress: 'పురోగతి',
-    completed: 'పూర్తయింది',
-    mastered: 'నైపుణ్యం',
-    locked: 'లాక్ చేయబడింది',
-    begin: 'ప్రారంభించండి',
-    retreat: 'వెనుకకు',
-    submit: 'సమర్పించండి',
-    continue: 'కొనసాగించండి',
-    backRoadmap: 'తిరిగి వెళ్ళు',
-    reread: 'మళ్ళీ చదవండి',
-    passed: 'ఉత్తీర్ణులయ్యారు',
-    failed: 'విఫలమయ్యారు',
-    xpGranted: 'XP పొందారు • జ్ఞానం అన్‌లాక్ చేయబడింది',
-    tryAgain: 'మళ్ళీ ప్రయత్నించండి',
-    level: 'స్థాయి',
-    settings: 'అమరికలు',
-    language: 'భాష',
-    notifications: 'నోటిఫికేషన్లు',
-    account: 'ఖాతా',
-    resources: 'వనరులు',
-    signupCta: "ఖాతా లేదా?",
-    loginCta: "సభ్యులేనా?",
-    welcome: "స్వాగతం",
-    newHere: "కొత్తవారా?",
-    createAccount: "ఖాతా సృష్టించు",
-    backToLogin: "లాగిన్",
-    pathBonus: "పూర్తయింది! +500 XP",
-    easy: 'సులభం', medium: 'మధ్యస్థం', hard: 'కఠినం'
-  },
-  kn: {
-    start: 'ಮುಂದುವರಿಯಿರಿ',
-    login: 'ಲಾಗಿನ್',
-    signup: 'ಸೈನ್ ಅಪ್',
-    enter: 'ಪ್ರವೇಶಿಸಿ',
-    join: 'ಸೇರಿ',
-    username: 'ಬಳಕೆದಾರ ಹೆಸರು',
-    password: 'ಪಾಸ್‌ವರ್ಡ್',
-    paths: 'ಮಾರ್ಗಗಳು',
-    profile: 'ಪ್ರೊಫೈಲ್',
-    choosePath: 'ನಿಮ್ಮ ದಾರಿಯನ್ನು ಆರಿಸಿ',
-    pathDesc: 'ಹಣಕಾಸಿನ ಮೂಲಭೂತ ಅಂಶಗಳನ್ನು ಕರಗತ ಮಾಡಿಕೊಳ್ಳಿ.',
-    progress: 'ಪ್ರಗತಿ',
-    completed: 'ಪೂರ್ಣಗೊಂಡಿದೆ',
-    mastered: 'ಕರಗತವಾಗಿದೆ',
-    locked: 'ಲಾಕ್ ಆಗಿದೆ',
-    begin: 'ಪ್ರಾರಂಭಿಸಿ',
-    retreat: 'ಹಿಂದೆ',
-    submit: 'ಸಲ್ಲಿಸಿ',
-    continue: 'ಮುಂದುವರಿಸಿ',
-    backRoadmap: 'ಹಿಂದಕ್ಕೆ',
-    reread: 'ಮತ್ತೊಮ್ಮೆ ಓದಿ',
-    passed: 'ಪಾಸಾಗಿದೆ',
-    failed: 'ವಿಫಲವಾಗಿದೆ',
-    xpGranted: 'XP ಲಭಿಸಿದೆ • ಜ್ಞಾನ ಅನ್‌ಲಾಕ್ ಆಗಿದೆ',
-    tryAgain: 'ಮತ್ತೊಮ್ಮೆ ಪ್ರಯತ್ನಿಸಿ',
-    level: 'ಹಂತ',
-    settings: 'ಸೆಟ್ಟಿಂಗ್‌ಗಳು',
-    language: 'ಭಾಷೆ',
-    notifications: 'ಸೂಚನೆಗಳು',
-    account: 'ಖಾತೆ',
-    resources: 'ಸಂಪನ್ಮೂಲಗಳು',
-    signupCta: "ಖಾತೆ ಇಲ್ಲವೇ?",
-    loginCta: "ಈಗಾಗಲೇ ಸದಸ್ಯರೇ?",
-    welcome: "ಸ್ವಾಗತ",
-    newHere: "ಹೊಸಬರೇ?",
-    createAccount: "ಖಾತೆ ತೆರೆಯಿರಿ",
-    backToLogin: "ಲಾಗಿನ್",
-    pathBonus: "ಪೂರ್ಣಗೊಂಡಿದೆ! +500 XP",
-    easy: 'ಸುಲಭ', medium: 'ಮಧ್ಯಮ', hard: 'ಕಠಿಣ'
-  },
-  ml: {
-    start: 'തുടരുക',
-    login: 'ലോഗിൻ',
-    signup: 'സൈൻ അപ്പ്',
-    enter: 'പ്രവേശിക്കുക',
-    join: 'ചേരുക',
-    username: 'ഉപയോക്തൃനാമം',
-    password: 'പാസ്‌വേഡ്',
-    paths: 'വഴികൾ',
-    profile: 'പ്രൊഫൈൽ',
-    choosePath: 'നിങ്ങളുടെ വഴി തിരഞ്ഞെടുക്കുക',
-    pathDesc: 'സാമ്പത്തിക കാര്യങ്ങൾ പഠിക്കുക.',
-    progress: 'പുരോഗതി',
-    completed: 'പൂർത്തിയായി',
-    mastered: 'നേടി',
-    locked: 'ലോക്ക് ചെയ്തു',
-    begin: 'തുടങ്ങുക',
-    retreat: 'പിന്നോട്ട്',
-    submit: 'സമർപ്പിക്കുക',
-    continue: 'തുടരുക',
-    backRoadmap: 'തിരികെ',
-    reread: 'വീണ്ടും വായിക്കുക',
-    passed: 'വിജയിച്ചു',
-    failed: 'പരാജയപ്പെട്ടു',
-    xpGranted: 'XP ലഭിച്ചു',
-    tryAgain: 'വീണ്ടും ശ്രമിക്കുക',
-    level: 'ലെവൽ',
-    settings: 'ക്രമീകരണങ്ങൾ',
-    language: 'ഭാഷ',
-    notifications: 'അറിയിപ്പുകൾ',
-    account: 'അക്കൗണ്ട്',
-    resources: 'വിഭവങ്ങൾ',
-    signupCta: "അക്കൗണ്ട് ഇല്ലേ?",
-    loginCta: "അംഗമാണോ?",
-    welcome: "സ്വാഗതം",
-    newHere: "പുതിയ ആളാണോ?",
-    createAccount: "അക്കൗണ്ട് ഉണ്ടാക്കുക",
-    backToLogin: "ലോഗിൻ",
-    pathBonus: "പൂർത്തിയായി! +500 XP",
-    easy: 'ലളിതം', medium: 'ഇടത്തരം', hard: 'കഠിനം'
-  },
-  ta: {
-    start: 'தொடரவும்',
-    login: 'உள்நுழைக',
-    signup: 'பதிவு',
-    enter: 'உள்ளிடவும்',
-    join: 'சேரவும்',
-    username: 'பயனர்பெயர்',
-    password: 'கடவுச்சொல்',
-    paths: 'வழிகள்',
-    profile: 'சுயவிவரம்',
-    choosePath: 'உங்கள் வழியைத் தேர்வுசெய்க',
-    pathDesc: 'நிதியியலைக் கற்றுக்கொள்ளுங்கள். ஒவ்வொரு தேடலும் XP மற்றும் பேட்ஜ்களை வழங்குகிறது.',
-    progress: 'முன்னேற்றம்',
-    completed: 'முடிந்தது',
-    mastered: 'தேர்ச்சி',
-    locked: 'பூட்டப்பட்டது',
-    begin: 'தொடங்கவும்',
-    retreat: 'பின்வாங்கு',
-    submit: 'சமர்ப்பிக்கவும்',
-    continue: 'தொடரவும்',
-    backRoadmap: 'திரும்பிச் செல்',
-    reread: 'மீண்டும் படி',
-    passed: 'தேர்ச்சி',
-    failed: 'தோல்வி',
-    xpGranted: 'XP வழங்கப்பட்டது',
-    tryAgain: 'மீண்டும் முயற்சிக்கவும்',
-    level: 'நிலை',
-    settings: 'அமைப்புகள்',
-    language: 'மொழி',
-    notifications: 'அறிவிப்புகள்',
-    account: 'கணக்கு',
-    resources: 'வளங்கள்',
-    signupCta: "கணக்கு இல்லையா?",
-    loginCta: "ஏற்கனவே உறுப்பினரா?",
-    welcome: "வரவேற்பு",
-    newHere: "புதியவரா?",
-    createAccount: "கணக்கை உருவாக்கு",
-    backToLogin: "உள்நுழைக",
-    pathBonus: "முடிந்தது! +500 XP",
-    easy: 'எளிது', medium: 'நடுத்தரம்', hard: 'கடினம்'
-  },
-  hi: {
-    start: 'आगे बढ़ें',
-    login: 'लॉग इन',
-    signup: 'साइन अप',
-    enter: 'प्रवेश करें',
-    join: 'शामिल हों',
-    username: 'यूज़रनेम',
-    password: 'पासवर्ड',
-    paths: 'रास्ते',
-    profile: 'प्रोफ़ाइल',
-    choosePath: 'अपना रास्ता चुनें',
-    pathDesc: 'पैसे की बुनियादी बातों में महारत हासिल करें। हर खोज XP और बैज देती है।',
-    progress: 'प्रगति',
-    completed: 'पूरा हुआ',
-    mastered: 'महारत हासिल',
-    locked: 'बंद है',
-    begin: 'ट्रायल शुरू करें',
-    retreat: 'पीछे हटें',
-    submit: 'उत्तर जमा करें',
-    continue: 'जारी रखें',
-    backRoadmap: 'वापस जाएं',
-    reread: 'फिर से पढ़ें',
-    passed: 'पास',
-    failed: 'फेल',
-    xpGranted: 'XP मिला • ज्ञान अनलॉक',
-    tryAgain: 'फिर से कोशिश करें',
-    level: 'स्तर',
-    settings: 'सेटिंग्स',
-    language: 'भाषा',
-    notifications: 'सूचनाएं',
-    account: 'खाता',
-    resources: 'संसाधन',
-    signupCta: "खाता नहीं है?",
-    loginCta: "पहले से सदस्य हैं?",
-    welcome: "स्वागत है",
-    newHere: "नए हैं?",
-    createAccount: "खाता बनाएं",
-    backToLogin: "लॉग इन",
-    pathBonus: "पथ पूरा हुआ! +500 XP",
-    easy: 'आसान', medium: 'मध्यम', hard: 'कठिन'
-  }
+  // Add other language translations for new keys as needed (fallback to English for now)
+  te: { start: 'కొనసాగండి', login: 'లాగిన్', signup: 'సైన్ అప్', enter: 'ప్రవేశించండి', join: 'చేరండి', username: 'యూజర్ పేరు', password: 'పాస్‌వర్డ్', paths: 'మార్గాలు', profile: 'ప్రొఫైల్', choosePath: 'మీ మార్గాన్ని ఎంచుకోండి', pathDesc: 'అన్ని మార్గాలను పూర్తి చేసి తదుపరి ర్యాంక్‌కు వెళ్లండి.', progress: 'ర్యాంక్ పురోగతి', completed: 'పూర్తయింది', mastered: 'నైపుణ్యం', locked: 'లాక్ చేయబడింది', begin: 'ప్రారంభించండి', retreat: 'వెనుకకు', submit: 'సమర్పించండి', continue: 'కొనసాగించండి', backRoadmap: 'తిరిగి వెళ్ళు', reread: 'మళ్ళీ చదవండి', passed: 'ఉత్తీర్ణులయ్యారు', failed: 'విఫలమయ్యారు', xpGranted: 'XP పొందారు', tryAgain: 'మళ్ళీ ప్రయత్నించండి', level: 'ర్యాంక్', settings: 'అమరికలు', language: 'భాష', notifications: 'నోటిఫికేషన్లు', account: 'ఖాతా', resources: 'వనరులు', signupCta: "ఖాతా లేదా?", loginCta: "సభ్యులేనా?", welcome: "స్వాగతం", newHere: "కొత్తవారా?", createAccount: "ఖాతా సృష్టించు", backToLogin: "లాగిన్", pathBonus: "పూర్తయింది! +500 XP", rankUpReady: "ర్యాంక్ పరీక్ష సిద్ధంగా ఉంది", takeExam: "పరీక్ష రాయండి", examDesc: "మీ నైపుణ్యాన్ని నిరూపించుకోండి.", easy: 'సులభం', medium: 'మధ్యస్థం', hard: 'కఠినం' },
+  kn: { start: 'ಮುಂದುವರಿಯಿರಿ', login: 'ಲಾಗಿನ್', signup: 'ಸೈನ್ ಅಪ್', enter: 'ಪ್ರವೇಶಿಸಿ', join: 'ಸೇರಿ', username: 'ಬಳಕೆದಾರ ಹೆಸರು', password: 'ಪಾಸ್‌ವರ್ಡ್', paths: 'ಮಾರ್ಗಗಳು', profile: 'ಪ್ರೊಫೈಲ್', choosePath: 'ನಿಮ್ಮ ದಾರಿಯನ್ನು ಆರಿಸಿ', pathDesc: 'ಮುಂದಿನ ಹಂತಕ್ಕೆ ಹೋಗಲು ಎಲ್ಲಾ ಮಾರ್ಗಗಳನ್ನು ಪೂರ್ಣಗೊಳಿಸಿ.', progress: 'ಶ್ರೇಣಿ ಪ್ರಗತಿ', completed: 'ಪೂರ್ಣಗೊಂಡಿದೆ', mastered: 'ಕರಗತವಾಗಿದೆ', locked: 'ಲಾಕ್ ಆಗಿದೆ', begin: 'ಪ್ರಾರಂಭಿಸಿ', retreat: 'ಹಿಂದೆ', submit: 'ಸಲ್ಲಿಸಿ', continue: 'ಮುಂದುವರಿಸಿ', backRoadmap: 'ಹಿಂದಕ್ಕೆ', reread: 'ಮತ್ತೊಮ್ಮೆ ಓದಿ', passed: 'ಪಾಸಾಗಿದೆ', failed: 'ವಿಫಲವಾಗಿದೆ', xpGranted: 'XP ಲಭಿಸಿದೆ', tryAgain: 'ಮತ್ತೊಮ್ಮೆ ಪ್ರಯತ್ನಿಸಿ', level: 'ಹಂತ', settings: 'ಸೆಟ್ಟಿಂಗ್‌ಗಳು', language: 'ಭಾಷೆ', notifications: 'ಸೂಚನೆಗಳು', account: 'ಖಾತೆ', resources: 'ಸಂಪನ್ಮೂಲಗಳು', signupCta: "ಖಾತೆ ಇಲ್ಲವೇ?", loginCta: "ಈಗಾಗಲೇ ಸದಸ್ಯರೇ?", welcome: "ಸ್ವಾಗತ", newHere: "ಹೊಸಬರೇ?", createAccount: "ಖಾತೆ ತೆರೆಯಿರಿ", backToLogin: "ಲಾಗಿನ್", pathBonus: "ಪೂರ್ಣಗೊಂಡಿದೆ! +500 XP", rankUpReady: "ಶ್ರೇಣಿ ಪರೀಕ್ಷೆ ಅನ್‌ಲಾಕ್ ಆಗಿದೆ", takeExam: "ಪರೀಕ್ಷೆ ತೆಗೆದುಕೊ", examDesc: "ಮುಂದಿನ ಹಂತಕ್ಕೆ ಹೋಗಲು ಪರೀಕ್ಷೆ ಬರೆಯಿರಿ.", easy: 'ಸುಲಭ', medium: 'ಮಧ್ಯಮ', hard: 'ಕಠಿಣ' },
+  ml: { start: 'തുടരുക', login: 'ലോഗിൻ', signup: 'സൈൻ അപ്പ്', enter: 'പ്രവേശിക്കുക', join: 'ചേരുക', username: 'ഉപയോക്തൃനാമം', password: 'പാസ്‌വേഡ്', paths: 'വഴികൾ', profile: 'പ്രൊഫൈൽ', choosePath: 'നിങ്ങളുടെ വഴി തിരഞ്ഞെടുക്കുക', pathDesc: 'അടുത്ത റാങ്കിലേക്ക് പോകാൻ എല്ലാ വഴികളും പൂർത്തിയാക്കുക.', progress: 'റാങ്ക് പുരോഗതി', completed: 'പൂർത്തിയായി', mastered: 'നേടി', locked: 'ലോക്ക് ചെയ്തു', begin: 'തുടങ്ങുക', retreat: 'പിന്നോട്ട്', submit: 'സമർപ്പിക്കുക', continue: 'തുടരുക', backRoadmap: 'തിരികെ', reread: 'വീണ്ടും വായിക്കുക', passed: 'വിജയിച്ചു', failed: 'പരാജയപ്പെട്ടു', xpGranted: 'XP ലഭിച്ചു', tryAgain: 'വീണ്ടും ശ്രമിക്കുക', level: 'റാങ്ക്', settings: 'ക്രമീകരണങ്ങൾ', language: 'ഭാഷ', notifications: 'അറിയിപ്പുകൾ', account: 'അക്കൗണ്ട്', resources: 'വിഭവങ്ങൾ', signupCta: "അക്കൗണ്ട് ഇല്ലേ?", loginCta: "അംഗമാണോ?", welcome: "സ്വാഗതം", newHere: "പുതിയ ആളാണോ?", createAccount: "അക്കൗണ്ട് ഉണ്ടാക്കുക", backToLogin: "ലോഗിൻ", pathBonus: "പൂർത്തിയായി! +500 XP", rankUpReady: "റാങ്ക് പരീക്ഷ തയ്യാറാണ്", takeExam: "പരീക്ഷ എഴുതുക", examDesc: "അടുത്ത റാങ്കിലേക്ക് പോകാൻ യോഗ്യത തെളിയിക്കുക.", easy: 'ലളിതം', medium: 'ഇടത്തരം', hard: 'കഠിനം' },
+  ta: { start: 'தொடரவும்', login: 'உள்நுழைக', signup: 'பதிவு', enter: 'உள்ளிடவும்', join: 'சேரவும்', username: 'பயனர்பெயர்', password: 'கடவுச்சொல்', paths: 'வழிகள்', profile: 'சுயவிவரம்', choosePath: 'உங்கள் வழியைத் தேர்வுசெய்க', pathDesc: 'அடுத்த நிலைக்குச் செல்ல அனைத்து வழிகளையும் முடிக்கவும்.', progress: 'தர முன்னேற்றம்', completed: 'முடிந்தது', mastered: 'தேர்ச்சி', locked: 'பூட்டப்பட்டது', begin: 'தொடங்கவும்', retreat: 'பின்வாங்கு', submit: 'சமர்ப்பிக்கவும்', continue: 'தொடரவும்', backRoadmap: 'திரும்பிச் செல்', reread: 'மீண்டும் படி', passed: 'தேர்ச்சி', failed: 'தோல்வி', xpGranted: 'XP வழங்கப்பட்டது', tryAgain: 'மீண்டும் முயற்சிக்கவும்', level: 'தரம்', settings: 'அமைப்புகள்', language: 'மொழி', notifications: 'அறிவிப்புகள்', account: 'கணக்கு', resources: 'வளங்கள்', signupCta: "கணக்கு இல்லையா?", loginCta: "ஏற்கனவே உறுப்பினரா?", welcome: "வரவேற்பு", newHere: "புதியவரா?", createAccount: "கணக்கை உருவாக்கு", backToLogin: "உள்நுழைக", pathBonus: "முடிந்தது! +500 XP", rankUpReady: "தேர்வு தயார்", takeExam: "தேர்வை எழுதுங்கள்", examDesc: "அடுத்த நிலைக்குச் செல்ல உங்கள் திறமையை நிரூபிக்கவும்.", easy: 'எளிது', medium: 'நடுத்தரம்', hard: 'கடினம்' },
+  hi: { start: 'आगे बढ़ें', login: 'लॉग इन', signup: 'साइन अप', enter: 'प्रवेश करें', join: 'शामिल हों', username: 'यूज़रनेम', password: 'पासवर्ड', paths: 'रास्ते', profile: 'प्रोफ़ाइल', choosePath: 'अपना रास्ता चुनें', pathDesc: 'अगले रैंक पर जाने के लिए सभी रास्ते पूरे करें।', progress: 'रैंक प्रगति', completed: 'पूरा हुआ', mastered: 'महारत हासिल', locked: 'बंद है', begin: 'ट्रायल शुरू करें', retreat: 'पीछे हटें', submit: 'उत्तर जमा करें', continue: 'जारी रखें', backRoadmap: 'वापस जाएं', reread: 'फिर से पढ़ें', passed: 'पास', failed: 'फेल', xpGranted: 'XP मिला', tryAgain: 'फिर से कोशिश करें', level: 'रैंक', settings: 'सेटिंग्स', language: 'भाषा', notifications: 'सूचनाएं', account: 'खाता', resources: 'संसाधन', signupCta: "खाता नहीं है?", loginCta: "पहले से सदस्य हैं?", welcome: "स्वागत है", newHere: "नए हैं?", createAccount: "खाता बनाएं", backToLogin: "लॉग इन", pathBonus: "पथ पूरा हुआ! +500 XP", rankUpReady: "रैंक परीक्षा अनलॉक", takeExam: "परीक्षा दें", examDesc: "अगले रैंक पर जाने के लिए परीक्षा पास करें।", easy: 'आसान', medium: 'मध्यम', hard: 'कठिन' }
 };
 
 const GeminiStar: React.FC<{ style: React.CSSProperties }> = ({ style }) => (
@@ -785,6 +589,14 @@ const GeometricBackground = memo(() => {
   );
 });
 
+// Explicit Rank Hierarchy
+const RANK_ORDER = [
+  'Beginner I', 'Beginner II', 'Beginner III',
+  'Intermediate I', 'Intermediate II', 'Intermediate III',
+  'Expert I', 'Expert II', 'Expert III',
+  'Grandmaster'
+];
+
 const App: React.FC = () => {
   const [view, setView] = useState<ViewState>('START');
   const [isLoginMode, setIsLoginMode] = useState(true);
@@ -802,6 +614,8 @@ const App: React.FC = () => {
     completedLessonIds: [], 
     xp: 0, 
     badges: [],
+    rankIndex: 0,
+    completedCategoriesForCurrentRank: [],
     completedRoadmapTitles: [],
     categoryProgress: {},
     language: 'en'
@@ -813,10 +627,16 @@ const App: React.FC = () => {
   const [isMuted, setIsMuted] = useState(false);
   const [audioInitialized, setAudioInitialized] = useState(false);
 
+  // Rank Exam State
+  const [rankExamQuestions, setRankExamQuestions] = useState<Quiz[]>([]);
+  const [currentExamQuestionIndex, setCurrentExamQuestionIndex] = useState(0);
+  const [examScore, setExamScore] = useState(0);
+
   const t = TRANSLATIONS[progress.language];
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const currentRankName = RANK_ORDER[progress.rankIndex];
 
-  // Derive categories and default levels from current language
+  // Derive categories
   const categories = useMemo(() => {
     const localized = LOCALIZED_CONTENT[progress.language].categories;
     return BASE_CATEGORIES.map(base => {
@@ -825,7 +645,7 @@ const App: React.FC = () => {
         ...base, 
         title: loc?.title || base.id, 
         description: loc?.description || '',
-        topics: loc?.topics || { level1: '', level2: '', level3: '' } // Merge translated topics
+        topics: loc?.topics || { level1: '', level2: '', level3: '' }
       };
     });
   }, [progress.language]);
@@ -834,34 +654,16 @@ const App: React.FC = () => {
     const w = LOCALIZED_CONTENT[progress.language].welcomeLesson;
     return [{
       id: 1,
-      title: progress.language === 'en' ? "Financial Foundations" : 
-             progress.language === 'hi' ? "वित्तीय नींव" : 
-             progress.language === 'te' ? "ఆర్థిక పునాదులు" :
-             progress.language === 'kn' ? "ಹಣಕಾಸಿನ ಅಡಿಪಾಯ" :
-             progress.language === 'ml' ? "സാമ്പത്തിക അടിത്തറകൾ" :
-             progress.language === 'ta' ? "நிதி அடிப்படைகள்" : "Financial Foundations",
-      lessons: [
-        {
-          id: "l1",
-          title: w.title,
-          content: w.content,
-          unlocked: true,
-          resources: [{ title: "Intro to Personal Finance", type: "Article", url: "https://www.google.com/search?q=intro+to+personal+finance" }],
-          quiz: {
-            question: w.quizQuestion,
-            options: w.options,
-            correct: 1
-          }
-        }
-      ]
+      title: "Introduction",
+      lessons: [{
+          id: "l1", title: w.title, content: w.content, unlocked: true, resources: [],
+          quiz: { question: w.quizQuestion, options: w.options, correct: 1 }
+        }]
     }];
   }, [progress.language]);
 
-  // Update roadmap when language changes if we are on the default view
   useEffect(() => {
-    if (!currentCategory) {
-      setRoadmap(defaultLevels);
-    }
+    if (!currentCategory) setRoadmap(defaultLevels);
   }, [defaultLevels, currentCategory]);
 
   useEffect(() => {
@@ -869,26 +671,16 @@ const App: React.FC = () => {
     audio.loop = true;
     audio.volume = 0.12;
     audioRef.current = audio;
-
-    return () => {
-      if (audioRef.current) {
-        audioRef.current.pause();
-        audioRef.current = null;
-      }
-    };
+    return () => { if (audioRef.current) { audioRef.current.pause(); audioRef.current = null; } };
   }, []);
 
   useEffect(() => {
-    if (audioRef.current) {
-      audioRef.current.muted = isMuted;
-    }
+    if (audioRef.current) audioRef.current.muted = isMuted;
   }, [isMuted]);
 
   const handleStartMusic = () => {
     if (audioRef.current && !audioInitialized) {
-      audioRef.current.play()
-        .then(() => setAudioInitialized(true))
-        .catch(e => console.error("Audio failed to play", e));
+      audioRef.current.play().then(() => setAudioInitialized(true)).catch(e => console.error(e));
     }
     setView('AUTH');
   };
@@ -901,50 +693,32 @@ const App: React.FC = () => {
     setSelectedOption(null);
   };
 
-  const userLevel = Math.floor(progress.xp / 100) + 1;
-  const xpInCurrentLevel = progress.xp % 100;
+  // Rank Progress Calculation (Paths Completed / Total Paths)
+  const rankCompletionPercentage = Math.round((progress.completedCategoriesForCurrentRank.length / categories.length) * 100);
+  const isReadyForRankUp = rankCompletionPercentage === 100 && progress.rankIndex < RANK_ORDER.length - 1;
 
   const roadmapProgress = useMemo(() => {
     if (!roadmap.length) return 0;
-    // Check if it's the default level by checking ID/content, roughly
     if (roadmap[0].id === 1 && roadmap[0].lessons[0].id === 'l1') return 0;
-
     const allLessons = roadmap.flatMap(l => l.lessons);
     if (allLessons.length === 0) return 0;
     const completed = allLessons.filter(l => progress.completedLessonIds.includes(l.id)).length;
     return Math.round((completed / allLessons.length) * 100);
   }, [roadmap, progress.completedLessonIds]);
 
-  const isRoadmapComplete = roadmapProgress === 100 && !!currentCategory;
+  const isCurrentRoadmapComplete = roadmapProgress === 100 && !!currentCategory;
 
-  // Path Completion Bonus & Badge Logic
+  // Mark Path as Complete for Current Rank
   useEffect(() => {
-    if (isRoadmapComplete && currentCategory && !progress.completedRoadmapTitles.includes(currentCategory)) {
+    if (isCurrentRoadmapComplete && currentCategory && !progress.completedCategoriesForCurrentRank.includes(currentCategory)) {
       setProgress(prev => ({
         ...prev,
-        xp: prev.xp + 500, // Bonus for full path
-        badges: [...prev.badges, `${currentCategory} Master`],
-        completedRoadmapTitles: [...prev.completedRoadmapTitles, currentCategory],
+        xp: prev.xp + 500,
+        completedCategoriesForCurrentRank: [...prev.completedCategoriesForCurrentRank, currentCategory],
         categoryProgress: { ...prev.categoryProgress, [currentCategory]: 100 }
       }));
     }
-  }, [isRoadmapComplete, currentCategory]);
-
-  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const val = e.target.value;
-    if (val.length < password.length) {
-      const newP = password.slice(0, val.length);
-      setPassword(newP);
-      setDisplayPassword('•'.repeat(newP.length));
-      return;
-    }
-    const newChar = val.slice(-1);
-    const newPass = password + newChar;
-    setPassword(newPass);
-    setDisplayPassword('•'.repeat(password.length) + newChar);
-    if (maskTimeout) clearTimeout(maskTimeout);
-    setMaskTimeout(setTimeout(() => setDisplayPassword('•'.repeat(newPass.length)), 700));
-  };
+  }, [isCurrentRoadmapComplete, currentCategory]);
 
   const handleAuth = (e: React.FormEvent) => {
     e.preventDefault();
@@ -952,23 +726,19 @@ const App: React.FC = () => {
   };
 
   const handleSelectCategory = async (cat: Category) => {
+    // If mastered for this rank, don't allow replay (or allow review mode - here we allow review)
     setCurrentCategory(cat.title);
     setView('LOADING');
-    
-    const minLoadTime = new Promise(resolve => setTimeout(resolve, 2200));
+    const minLoadTime = new Promise(resolve => setTimeout(resolve, 2000));
     
     try {
       const [customRoadmap] = await Promise.all([
-        generateCustomRoadmap(cat.title, cat.difficulty as string, cat.topics, progress.language),
+        generateCustomRoadmap(cat.title, cat.difficulty, cat.topics, progress.language, currentRankName),
         minLoadTime
       ]);
-      
-      if (customRoadmap && customRoadmap.length > 0) {
-        setRoadmap(customRoadmap);
-      }
+      if (customRoadmap && customRoadmap.length > 0) setRoadmap(customRoadmap);
       setView('ROADMAP');
     } catch (e) {
-      console.error("Path generation failed", e);
       setView('ONBOARDING');
     }
   };
@@ -976,38 +746,18 @@ const App: React.FC = () => {
   const handleFinishQuiz = () => {
     if (activeLesson && selectedOption === activeLesson.quiz.correct) {
       setQuizSuccess(true);
-      
       if (!progress.completedLessonIds.includes(activeLesson.id)) {
-        // Calculate XP based on difficulty
-        const currentCat = categories.find(c => c.title === currentCategory);
-        let baseXp = 50;
-        if (currentCat?.difficulty === 'Medium') baseXp = 75;
-        if (currentCat?.difficulty === 'Hard') baseXp = 100;
-
+        let baseXp = 50 + (progress.rankIndex * 20); // Scale XP by Rank
         setEarnedXp(baseXp);
-
-        // Progress Calculation
-        const allLessons = roadmap.flatMap(l => l.lessons);
-        const newlyCompletedCount = allLessons.filter(l => 
-          progress.completedLessonIds.includes(l.id) || l.id === activeLesson.id
-        ).length;
-        const newCatProgress = Math.round((newlyCompletedCount / allLessons.length) * 100);
-
-        // Level Up Badge Logic (Every 5 levels)
-        const newTotalXp = progress.xp + baseXp;
-        const newLevel = Math.floor(newTotalXp / 100) + 1;
-        const oldLevel = Math.floor(progress.xp / 100) + 1;
         
-        let newBadges = [...progress.badges];
-        if (newLevel > oldLevel && newLevel % 5 === 0) {
-          newBadges.push(`Level ${newLevel} Veteran`);
-        }
+        const allLessons = roadmap.flatMap(l => l.lessons);
+        const newlyCompletedCount = allLessons.filter(l => progress.completedLessonIds.includes(l.id) || l.id === activeLesson.id).length;
+        const newCatProgress = Math.round((newlyCompletedCount / allLessons.length) * 100);
 
         setProgress(prev => ({
           ...prev,
           completedLessonIds: [...prev.completedLessonIds, activeLesson.id],
-          xp: newTotalXp,
-          badges: newBadges,
+          xp: prev.xp + baseXp,
           categoryProgress: { ...prev.categoryProgress, [currentCategory]: newCatProgress }
         }));
       } else {
@@ -1020,81 +770,79 @@ const App: React.FC = () => {
     setView('QUIZ_SUMMARY');
   };
 
-  const SettingsMenu = () => (
-    <div className="relative">
-      <button 
-        onClick={() => setSettingsOpen(!settingsOpen)}
-        className="p-2 border-2 border-black neo-shadow bg-white hover:bg-gray-100 transition-all font-bold uppercase text-sm flex items-center gap-2"
-      >
-        <span>⚙️</span>
-      </button>
-      {settingsOpen && (
-        <div className="absolute right-0 top-full mt-2 w-48 bg-white border-2 border-black neo-shadow-lg p-2 z-50 flex flex-col gap-2">
-           <div className="text-xs font-black uppercase border-b-2 border-black/10 pb-1 mb-1">{t.settings}</div>
-           
-           <div className="space-y-1">
-             <label className="text-xs font-bold uppercase block">{t.language}</label>
-             <select 
-               value={progress.language}
-               onChange={(e) => {
-                 setProgress(p => ({...p, language: e.target.value as Language}));
-                 setSettingsOpen(false);
-               }}
-               className="w-full text-sm border-2 border-black p-1 bg-gray-50 font-bold"
-             >
-               <option value="en">English</option>
-               <option value="te">Telugu</option>
-               <option value="kn">Kannada</option>
-               <option value="ml">Malayalam</option>
-               <option value="ta">Tamil</option>
-               <option value="hi">Hindi</option>
-             </select>
-           </div>
+  const startRankExam = async () => {
+    setView('LOADING');
+    try {
+      const questions = await generateRankExam(currentRankName, progress.language);
+      if (questions.length > 0) {
+        setRankExamQuestions(questions);
+        setCurrentExamQuestionIndex(0);
+        setExamScore(0);
+        setView('RANK_EXAM');
+      } else {
+        // Fallback or error
+        setView('ONBOARDING');
+      }
+    } catch(e) {
+      setView('ONBOARDING');
+    }
+  };
 
-           <div className="space-y-1 mt-2">
-              <label className="text-xs font-bold uppercase block">{t.notifications}</label>
-              <div className="flex items-center gap-2 text-xs font-bold">
-                 <div className="w-4 h-4 border-2 border-black bg-[#90EE90]"></div>
-                 <span>ON</span>
-              </div>
-           </div>
+  const submitExamAnswer = (selectedIndex: number) => {
+    const currentQ = rankExamQuestions[currentExamQuestionIndex];
+    if (selectedIndex === currentQ.correct) {
+      setExamScore(s => s + 1);
+    }
 
-           <div className="border-t-2 border-black/10 mt-2 pt-2">
-             <button className="text-xs font-black uppercase text-red-500 hover:underline">{t.account}</button>
-           </div>
-        </div>
-      )}
-    </div>
-  );
+    if (currentExamQuestionIndex < rankExamQuestions.length - 1) {
+      setCurrentExamQuestionIndex(i => i + 1);
+    } else {
+      // Exam Finished
+      // Check if score is sufficient (e.g., 3/5)
+      const finalScore = selectedIndex === currentQ.correct ? examScore + 1 : examScore;
+      if (finalScore >= 3) {
+        // RANK UP!
+        const nextRankIdx = progress.rankIndex + 1;
+        setProgress(prev => ({
+          ...prev,
+          rankIndex: nextRankIdx,
+          completedCategoriesForCurrentRank: [], // Reset for new rank
+          categoryProgress: {}, // Reset progress bars
+          badges: [...prev.badges, currentRankName], // Award old rank as badge
+          xp: prev.xp + 1000
+        }));
+        setView('RANK_SUCCESS');
+      } else {
+        // Failed
+        setView('QUIZ_SUMMARY'); // Reuse summary or make custom fail screen
+        setQuizSuccess(false);
+        setEarnedXp(0);
+      }
+    }
+  };
 
   const NavHeader = () => (
     <div className="flex justify-between items-center mb-12 border-b-2 border-black pb-4">
       <div className="flex items-center gap-4">
-        <button 
-          onClick={handleHome} 
-          className="text-2xl font-arcane title-main hover:scale-105 transition-transform active:scale-95"
-          title="Back to Paths"
-        >
-          FINQUEST
-        </button>
-        <div className="hidden sm:flex items-center gap-2">
-          <div className="bg-black text-[#90EE90] px-3 py-1 border-2 border-black neo-shadow font-black uppercase text-xs">{t.level} {userLevel}</div>
-          <div className="h-6 w-28 progress-bar-container">
-            <div className="progress-bar-inner" style={{ width: `${xpInCurrentLevel}%` }}></div>
+        <button onClick={handleHome} className="text-2xl font-arcane title-main">FINQUEST</button>
+        <div className="hidden lg:flex items-center gap-2">
+          <div className="bg-black text-[#90EE90] px-3 py-1 border-2 border-black neo-shadow font-black uppercase text-xs">
+             {t.level}: {currentRankName}
+          </div>
+          <div className="flex flex-col gap-0.5">
+            <div className="h-6 w-32 progress-bar-container">
+              <div className="progress-bar-inner" style={{ width: `${rankCompletionPercentage}%` }}></div>
+            </div>
+            <span className="text-[10px] font-black uppercase text-right leading-none opacity-60">
+              {progress.completedCategoriesForCurrentRank.length}/{categories.length} Paths
+            </span>
           </div>
         </div>
       </div>
       <div className="flex gap-3 items-center">
-        <button 
-          onClick={() => setIsMuted(!isMuted)} 
-          className="p-2 border-2 border-black neo-shadow bg-white hover:bg-gray-100 transition-all text-xl"
-          title={isMuted ? "Unmute" : "Mute"}
-        >
-          {isMuted ? '🔈' : '🔊'}
-        </button>
+        <button onClick={() => setIsMuted(!isMuted)} className="p-2 border-2 border-black neo-shadow bg-white">{isMuted ? '🔈' : '🔊'}</button>
         <NeoButton variant="secondary" onClick={handleHome} className="text-xs py-1.5 px-3">{t.paths}</NeoButton>
         <NeoButton variant="secondary" onClick={() => setView('PROFILE')} className="text-xs py-1.5 px-3">{t.profile}</NeoButton>
-        <SettingsMenu />
       </div>
     </div>
   );
@@ -1107,65 +855,31 @@ const App: React.FC = () => {
             <h1 className="text-7xl md:text-9xl font-arcane mb-4 text-center title-main uppercase">FINQUEST</h1>
             <p className="text-xl md:text-2xl font-black mb-16 text-black uppercase tracking-tighter">Finance Learning Made Fun!</p>
             <NeoButton onClick={handleStartMusic} className="text-2xl px-12 py-4">{t.start}</NeoButton>
-            <div className="mt-8">
-               <button onClick={() => setIsMuted(!isMuted)} className="text-xs font-black uppercase underline">
-                  {isMuted ? 'Unmute Audio' : 'Mute Audio'}
-               </button>
-            </div>
+            <div className="mt-8"><button onClick={() => setIsMuted(!isMuted)} className="text-xs font-black uppercase underline">{isMuted ? 'Unmute' : 'Mute'}</button></div>
           </div>
         );
 
       case 'AUTH':
         return (
           <div className="min-h-screen flex flex-col items-center justify-center p-4 fade-in">
-            <div className="w-full max-w-4xl grid grid-cols-1 md:grid-cols-2 gap-0 border-2 border-black neo-shadow-lg bg-white">
-              {/* Login/Form Side */}
+             {/* Same Auth UI as before */}
+             <div className="w-full max-w-4xl grid grid-cols-1 md:grid-cols-2 gap-0 border-2 border-black neo-shadow-lg bg-white">
               <div className="p-8 md:p-12 flex flex-col justify-center border-b-2 md:border-b-0 md:border-r-2 border-black">
                 <h2 className="text-4xl font-arcane mb-8 uppercase text-left">{isLoginMode ? t.login : t.signup}</h2>
-                
-                {/* Language Selector on Login */}
                 <div className="flex gap-2 mb-6 flex-wrap">
-                  {[
-                    { code: 'en', label: 'English' },
-                    { code: 'te', label: 'తెలుగు' },
-                    { code: 'kn', label: 'ಕನ್ನಡ' },
-                    { code: 'ml', label: 'മലയാളം' },
-                    { code: 'ta', label: 'தமிழ்' },
-                    { code: 'hi', label: 'हिंदी' }
-                  ].map((lang) => (
-                    <button 
-                      key={lang.code}
-                      onClick={() => setProgress(p => ({...p, language: lang.code as Language}))}
-                      className={`text-xs font-black uppercase px-2 py-1 border-2 border-black ${progress.language === lang.code ? 'bg-[#90EE90]' : 'bg-white'}`}
-                    >
-                      {lang.label}
-                    </button>
+                  {['en', 'te', 'kn', 'ml', 'ta', 'hi'].map((l) => (
+                    <button key={l} onClick={() => setProgress(p => ({...p, language: l as Language}))} className={`text-xs font-black uppercase px-2 py-1 border-2 border-black ${progress.language === l ? 'bg-[#90EE90]' : 'bg-white'}`}>{l.toUpperCase()}</button>
                   ))}
                 </div>
-
                 <form onSubmit={handleAuth} className="space-y-6">
-                  <div>
-                    <label className="font-black uppercase text-xs mb-1 block">{t.username}</label>
-                    <input type="text" value={username} onChange={e => setUsername(e.target.value)} className="w-full bg-white border-2 border-black p-3 font-bold focus:ring-0" required />
-                  </div>
-                  <div>
-                    <label className="font-black uppercase text-xs mb-1 block">{t.password}</label>
-                    <input type="text" value={displayPassword} onChange={handlePasswordChange} className="w-full bg-white border-2 border-black p-3 font-bold font-mono tracking-widest focus:ring-0" placeholder="••••••••" required />
-                  </div>
+                  <div><label className="font-black uppercase text-xs mb-1 block">{t.username}</label><input type="text" value={username} onChange={e => setUsername(e.target.value)} className="w-full border-2 border-black p-3 font-bold" required /></div>
+                  <div><label className="font-black uppercase text-xs mb-1 block">{t.password}</label><input type="password" value={password} onChange={e => setPassword(e.target.value)} className="w-full border-2 border-black p-3 font-bold" required /></div>
                   <NeoButton type="submit" className="w-full py-4 text-xl mt-4">{isLoginMode ? t.enter : t.join} →</NeoButton>
                 </form>
               </div>
-
-              {/* Toggle Side */}
-              <div className={`p-8 md:p-12 flex flex-col items-center justify-center text-center transition-colors ${!isLoginMode ? 'bg-[#90EE90]' : 'bg-yellow-100'}`}>
+              <div className={`p-8 md:p-12 flex flex-col items-center justify-center text-center ${!isLoginMode ? 'bg-[#90EE90]' : 'bg-yellow-100'}`}>
                  <h3 className="text-3xl font-black uppercase mb-4">{isLoginMode ? t.newHere : t.welcome}</h3>
-                 <p className="font-bold mb-8 max-w-xs">{isLoginMode ? "Start your journey to financial freedom today." : "Log back in to continue your streak."}</p>
-                 <button 
-                  onClick={() => { setIsLoginMode(!isLoginMode); setPassword(''); setDisplayPassword(''); }}
-                  className="bg-white border-2 border-black px-8 py-3 font-black uppercase neo-shadow hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all"
-                 >
-                   {isLoginMode ? t.createAccount : t.backToLogin}
-                 </button>
+                 <button onClick={() => setIsLoginMode(!isLoginMode)} className="bg-white border-2 border-black px-8 py-3 font-black uppercase neo-shadow">{isLoginMode ? t.createAccount : t.backToLogin}</button>
               </div>
             </div>
           </div>
@@ -1177,38 +891,48 @@ const App: React.FC = () => {
             <NavHeader />
             <h2 className="text-5xl font-arcane mb-4 uppercase text-center title-main">{t.choosePath}</h2>
             <p className="text-xl font-bold mb-12 text-center max-w-2xl mx-auto">{t.pathDesc}</p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 w-full pb-12">
+            
+            {isReadyForRankUp && (
+              <div className="mb-12 bg-white border-2 border-black p-8 neo-shadow-lg text-center animate-bounce-slight">
+                <h3 className="text-3xl font-arcane mb-2 uppercase">{t.rankUpReady}</h3>
+                <p className="mb-6 font-bold">{t.examDesc}</p>
+                <NeoButton onClick={startRankExam} className="text-2xl py-4 w-full md:w-auto">{t.takeExam} →</NeoButton>
+              </div>
+            )}
+
+            <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 w-full pb-12 ${isReadyForRankUp ? 'opacity-50 pointer-events-none' : ''}`}>
               {categories.map((cat) => {
+                const isMastered = progress.completedCategoriesForCurrentRank.includes(cat.title);
                 const catPerc = progress.categoryProgress[cat.title] || 0;
-                const isDone = progress.completedRoadmapTitles.includes(cat.title);
-                const diffKey = cat.difficulty.toLowerCase() as keyof typeof t;
-                const displayDifficulty = t[diffKey] || cat.difficulty;
 
                 return (
                   <button 
                     key={cat.id}
                     onClick={() => handleSelectCategory(cat)}
-                    className="bg-white border-2 border-black p-6 text-left neo-shadow hover:-translate-y-2 transition-all group flex flex-col h-full"
+                    className="bg-white border-2 border-black p-6 text-left neo-shadow hover:-translate-y-2 transition-all group flex flex-col h-full relative overflow-hidden"
                   >
+                    {isMastered && (
+                      <div className="absolute inset-0 bg-[#90EE90]/90 z-10 flex items-center justify-center backdrop-blur-sm">
+                        <div className="bg-black text-[#90EE90] px-4 py-2 border-2 border-black font-black text-xl -rotate-6 shadow-[4px_4px_0px_white]">
+                          {t.mastered}
+                        </div>
+                      </div>
+                    )}
                     <div className="flex justify-between items-start mb-4">
                       <div className="text-5xl group-hover:scale-110 transition-transform">{cat.icon}</div>
-                      <div className={`text-[10px] font-black uppercase px-2 py-1 border-2 border-black ${
-                        cat.difficulty === 'Easy' ? 'bg-green-100' : 
-                        cat.difficulty === 'Medium' ? 'bg-yellow-100' : 'bg-red-100'
-                      }`}>
-                        {displayDifficulty}
+                      <div className="text-[10px] font-black uppercase px-2 py-1 border-2 border-black bg-yellow-100">
+                        {currentRankName}
                       </div>
                     </div>
                     <h3 className="text-2xl font-black uppercase mb-2">{cat.title}</h3>
                     <p className="font-bold text-black/60 mb-6 flex-grow">{cat.description}</p>
-                    
                     <div className="mt-auto space-y-3">
                       <div className="flex justify-between items-center">
                          <span className="text-xs font-black uppercase">{t.progress}</span>
-                         <span className="text-sm font-black">{isDone ? t.completed : `${catPerc}%`}</span>
+                         <span className="text-sm font-black">{isMastered ? 100 : catPerc}%</span>
                       </div>
                       <div className="h-4 w-full progress-bar-container">
-                        <div className="progress-bar-inner" style={{ width: `${isDone ? 100 : catPerc}%` }}></div>
+                        <div className="progress-bar-inner" style={{ width: `${isMastered ? 100 : catPerc}%` }}></div>
                       </div>
                     </div>
                   </button>
@@ -1217,116 +941,92 @@ const App: React.FC = () => {
             </div>
           </div>
         );
-
-      case 'PROFILE':
+      
+      case 'RANK_EXAM':
+        const question = rankExamQuestions[currentExamQuestionIndex];
         return (
-          <div className="min-h-screen p-8 md:p-12 fade-in max-w-4xl mx-auto flex flex-col">
-            <NavHeader />
-            <div className="bg-white border-2 border-black p-8 neo-shadow-lg">
-              <h2 className="text-4xl font-arcane mb-8 uppercase border-b-2 border-black pb-4">{t.profile}</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
-                <div className="space-y-6">
-                  <div className="border-2 border-black p-6 neo-shadow bg-[#90EE90]/20">
-                    <p className="text-xs font-black uppercase text-black/40 mb-1">Total Power</p>
-                    <p className="text-5xl font-arcane">{progress.xp} XP</p>
-                    <p className="font-bold mt-4">{t.level}: {userLevel}</p>
-                    <div className="h-6 w-full progress-bar-container mt-4">
-                      <div className="progress-bar-inner" style={{ width: `${xpInCurrentLevel}%` }}></div>
-                    </div>
-                  </div>
-                  <div className="border-2 border-black p-4 neo-shadow">
-                    <p className="text-xs font-black uppercase text-black/40 mb-3">Badges Earned</p>
-                    <div className="flex flex-wrap gap-3">
-                      {progress.badges.length > 0 ? progress.badges.map((b, i) => (
-                        <div key={i} className="bg-yellow-400 border-2 border-black p-2 neo-shadow font-bold text-xs uppercase flex items-center gap-2">
-                          🏅 {b}
-                        </div>
-                      )) : <p className="font-bold text-black/30">No badges yet.</p>}
-                    </div>
-                  </div>
-                </div>
-                <div className="space-y-6">
-                  <div className="border-2 border-black p-4 neo-shadow h-full">
-                    <p className="text-xs font-black uppercase text-black/40 mb-3">Mastered Quests</p>
-                    <div className="space-y-4">
-                      {progress.completedRoadmapTitles.length > 0 ? progress.completedRoadmapTitles.map((t, i) => (
-                        <div key={i} className="space-y-2">
-                          <div className="flex justify-between items-center">
-                            <span className="font-bold uppercase text-sm">{t}</span>
-                            <span className="text-xs font-black bg-[#90EE90] px-2 py-0.5 border-2 border-black">100%</span>
-                          </div>
-                          <div className="h-4 w-full progress-bar-container">
-                            <div className="progress-bar-inner" style={{ width: '100%' }}></div>
-                          </div>
-                        </div>
-                      )) : <p className="font-bold text-black/30 text-sm italic">Quests in progress...</p>}
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <NeoButton onClick={handleHome} className="w-full mt-12 py-4 text-xl">{t.backRoadmap} →</NeoButton>
+          <div className="min-h-screen p-8 md:p-12 fade-in max-w-3xl mx-auto flex flex-col justify-center">
+            <div className="bg-white border-4 border-black p-8 md:p-12 neo-shadow-lg relative">
+               <div className="absolute -top-6 left-1/2 -translate-x-1/2 bg-black text-[#90EE90] px-6 py-2 border-2 border-white font-black text-xl uppercase tracking-widest">
+                  RANK UP EXAM
+               </div>
+               <div className="flex justify-between mb-8 text-xs font-black uppercase text-black/40">
+                 <span>Question {currentExamQuestionIndex + 1} of {rankExamQuestions.length}</span>
+                 <span>Target: {RANK_ORDER[progress.rankIndex + 1]}</span>
+               </div>
+               <h2 className="text-2xl md:text-3xl font-bold mb-8">{question.question}</h2>
+               <div className="grid gap-4">
+                 {question.options.map((opt, i) => (
+                   <button 
+                     key={i}
+                     onClick={() => submitExamAnswer(i)}
+                     className="p-4 border-2 border-black text-left font-bold hover:bg-[#90EE90] transition-colors neo-shadow active:translate-y-1 active:shadow-none"
+                   >
+                     {opt}
+                   </button>
+                 ))}
+               </div>
             </div>
           </div>
+        );
+
+      case 'RANK_SUCCESS':
+        return (
+           <div className="min-h-screen flex flex-col items-center justify-center p-4 fade-in bg-yellow-300">
+              <div className="bg-white border-8 border-black p-12 neo-shadow-lg text-center max-w-2xl rotate-2 animate-bounce-slight">
+                 <div className="text-8xl mb-6">🏆</div>
+                 <h2 className="text-5xl md:text-7xl font-arcane mb-4 uppercase">RANK UP!</h2>
+                 <p className="text-2xl font-bold mb-8">You are now a {currentRankName}</p>
+                 <div className="text-lg font-bold mb-8 opacity-60">
+                    Your path progress has been reset.<br/>New challenges await at this higher difficulty level.
+                 </div>
+                 <NeoButton onClick={handleHome} className="text-2xl py-4 w-full">CONTINUE JOURNEY →</NeoButton>
+              </div>
+           </div>
         );
 
       case 'LOADING':
-        return (
+         /* Existing Loading View */
+         return (
           <div className="min-h-screen flex flex-col items-center justify-center p-4 fade-in bg-[#AFEEEE]">
             <div className="flex flex-col items-center gap-12 text-center max-w-md">
-              <div className="gemini-container">
-                 <div className="gemini-star-wrapper">
-                    <div className="gemini-star-inner"></div>
-                 </div>
-              </div>
+              <div className="gemini-container"><div className="gemini-star-wrapper"><div className="gemini-star-inner"></div></div></div>
               <div className="space-y-4">
-                <h2 className="text-4xl font-arcane uppercase tracking-widest title-main">GENERATING YOUR PATH</h2>
-                <div className="flex flex-col gap-2">
-                  <p className="font-black uppercase tracking-[0.2em] text-black/60 text-sm">Consulting the Financial Spirits...</p>
-                  <div className="h-2 w-full progress-bar-container max-w-[200px] mx-auto opacity-50">
-                    <div className="progress-bar-inner" style={{ width: '100%' }}></div>
-                  </div>
-                </div>
+                <h2 className="text-4xl font-arcane uppercase tracking-widest title-main">GENERATING CONTENT</h2>
+                <p className="font-black uppercase tracking-[0.2em] text-black/60 text-sm">Consulting the Financial Spirits...</p>
               </div>
             </div>
           </div>
         );
 
+      /* Other cases (ROADMAP, LESSON, QUIZ, PROFILE, QUIZ_SUMMARY) remain largely same but ensure they use currentRankName logic */
       case 'ROADMAP':
-        return (
-          <div className={`min-h-screen p-8 md:p-12 fade-in max-w-4xl mx-auto transition-colors duration-300 ${isRoadmapComplete ? 'completed-theme' : ''}`}>
-            {isRoadmapComplete && (
+         return (
+          <div className={`min-h-screen p-8 md:p-12 fade-in max-w-4xl mx-auto transition-colors duration-300 ${isCurrentRoadmapComplete ? 'completed-theme' : ''}`}>
+            {isCurrentRoadmapComplete && (
               <div className="fixed inset-0 z-50 flex items-center justify-center roadmap-completed-overlay">
                  <div className="bg-[#90EE90] border-8 border-black p-12 neo-shadow-lg text-center rotate-[-2deg] fade-in max-w-lg">
                     <h2 className="text-6xl font-arcane mb-4 uppercase text-black">{t.mastered}</h2>
                     <p className="text-xl font-bold mb-2 text-black">{t.pathBonus}</p>
-                    <p className="text-lg font-bold mb-8 text-black opacity-60">THE {currentCategory.toUpperCase()} PATH IS COMPLETE</p>
-                    <div className="flex flex-col gap-4">
-                      <NeoButton onClick={handleHome} className="text-2xl py-4">{t.choosePath} →</NeoButton>
-                      <button onClick={() => setView('PROFILE')} className="text-black font-black uppercase hover:underline">{t.profile}</button>
-                    </div>
+                    <NeoButton onClick={handleHome} className="text-2xl py-4 mt-8">{t.choosePath} →</NeoButton>
                  </div>
               </div>
             )}
-            
             <NavHeader />
-
             <div className="mb-12 border-2 border-black p-8 neo-shadow bg-white/60 backdrop-blur-md">
               <div className="flex justify-between items-center mb-4">
-                <h3 className="text-2xl font-black uppercase tracking-tight">{currentCategory || 'Initial Quest'} {t.progress}</h3>
+                <h3 className="text-2xl font-black uppercase tracking-tight">{currentCategory} ({currentRankName})</h3>
                 <span className="text-4xl font-arcane text-[#90EE90] drop-shadow-[2px_2px_0_rgba(0,0,0,1)]">{roadmapProgress}%</span>
               </div>
               <div className="h-10 w-full progress-bar-container">
                 <div className="progress-bar-inner" style={{ width: `${roadmapProgress}%` }}></div>
               </div>
             </div>
-
             <div className="space-y-16">
               {roadmap.map((lvl) => (
                 <div key={lvl.id} className="relative">
                   <div className="flex items-center gap-4 mb-8">
-                    <div className="bg-black text-[#90EE90] w-16 h-16 flex items-center justify-center border-2 border-black neo-shadow font-black text-2xl rotate-[-3deg]">
-                      {lvl.id}
-                    </div>
+                    <div className="bg-black text-[#90EE90] w-16 h-16 flex items-center justify-center border-2 border-black neo-shadow font-black text-2xl rotate-[-3deg]">{lvl.id}</div>
                     <h3 className="text-4xl font-black uppercase">{lvl.title}</h3>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8 relative">
@@ -1335,24 +1035,14 @@ const App: React.FC = () => {
                       const currentIdx = allLessons.indexOf(lesson);
                       const isAccessible = currentIdx === 0 || progress.completedLessonIds.includes(allLessons[currentIdx - 1].id);
                       const isCompleted = progress.completedLessonIds.includes(lesson.id);
-
                       return (
-                        <button 
-                          key={lesson.id}
-                          disabled={!isAccessible}
-                          onClick={() => { setActiveLesson(lesson); setView('LESSON'); }}
-                          className={`p-6 border-2 border-black text-left relative transition-all ${isAccessible ? 'bg-white neo-shadow hover:-translate-y-2 active:translate-y-0 active:shadow-none' : 'bg-gray-200 opacity-50 cursor-not-allowed'} ${isCompleted ? 'bg-[#90EE90]/20' : ''}`}
-                        >
+                        <button key={lesson.id} disabled={!isAccessible} onClick={() => { setActiveLesson(lesson); setView('LESSON'); }} className={`p-6 border-2 border-black text-left relative transition-all ${isAccessible ? 'bg-white neo-shadow hover:-translate-y-2' : 'bg-gray-200 opacity-50 cursor-not-allowed'} ${isCompleted ? 'bg-[#90EE90]/20' : ''}`}>
                           <div className="flex justify-between items-start mb-3">
                             <span className="text-xs font-black uppercase tracking-widest text-black/40">Task {currentIdx + 1}</span>
                             {isCompleted && <span className="text-xs bg-black text-[#90EE90] px-2 py-1 font-bold uppercase">{t.mastered}</span>}
                           </div>
                           <h4 className="text-2xl font-bold uppercase leading-tight">{lesson.title}</h4>
-                          {!isAccessible && (
-                            <div className="absolute inset-0 flex items-center justify-center bg-black/5 backdrop-blur-[1px]">
-                              <span className="text-5xl">🔒</span>
-                            </div>
-                          )}
+                          {!isAccessible && <div className="absolute inset-0 flex items-center justify-center bg-black/5 backdrop-blur-[1px]"><span className="text-5xl">🔒</span></div>}
                         </button>
                       );
                     })}
@@ -1361,7 +1051,7 @@ const App: React.FC = () => {
               ))}
             </div>
           </div>
-        );
+         );
 
       case 'LESSON':
         return activeLesson && (
@@ -1369,34 +1059,18 @@ const App: React.FC = () => {
             <NavHeader />
             <div className="bg-white border-2 border-black p-8 md:p-12 neo-shadow-lg">
               <h2 className="text-xs font-black uppercase tracking-[0.2em] mb-4 text-black/40 border-b-2 border-black/10 pb-2">Topic Explorer • {activeLesson.title}</h2>
-              <div className="text-3xl md:text-4xl font-bold leading-tight mb-8">
-                {activeLesson.content}
-              </div>
-              
-              {/* Linked Educational Resources */}
+              <div className="text-3xl md:text-4xl font-bold leading-tight mb-8">{activeLesson.content}</div>
               {activeLesson.resources && activeLesson.resources.length > 0 && (
                 <div className="mb-8 p-6 bg-blue-50 border-2 border-black border-dashed">
-                   <h3 className="text-sm font-black uppercase mb-4 flex items-center gap-2">
-                     <span>📚</span> {t.resources}
-                   </h3>
-                   <div className="space-y-3">
-                      {activeLesson.resources.map((res, idx) => (
-                        <a 
-                          key={idx} 
-                          href={res.url} 
-                          target="_blank" 
-                          rel="noreferrer"
-                          className="flex items-center gap-3 p-3 bg-white border-2 border-black hover:bg-[#90EE90] transition-colors"
-                        >
+                   <h3 className="text-sm font-black uppercase mb-4 flex items-center gap-2"><span>📚</span> {t.resources}</h3>
+                   <div className="space-y-3">{activeLesson.resources.map((res, idx) => (
+                        <a key={idx} href={res.url} target="_blank" rel="noreferrer" className="flex items-center gap-3 p-3 bg-white border-2 border-black hover:bg-[#90EE90] transition-colors">
                            <span className="text-xl">{res.type === 'Video' ? '📺' : res.type === 'Tool' ? '🛠️' : '📰'}</span>
                            <span className="font-bold underline">{res.title}</span>
-                           <span className="text-xs font-black uppercase bg-black text-white px-1 ml-auto">{res.type}</span>
                         </a>
-                      ))}
-                   </div>
+                   ))}</div>
                 </div>
               )}
-
               <div className="flex gap-6">
                 <NeoButton onClick={() => setView('QUIZ')} className="flex-1 py-6 text-3xl">{t.begin} →</NeoButton>
                 <NeoButton variant="secondary" onClick={() => setView('ROADMAP')}>{t.retreat}</NeoButton>
@@ -1414,11 +1088,7 @@ const App: React.FC = () => {
               <p className="text-3xl font-bold mb-10">{activeLesson.quiz.question}</p>
               <div className="grid gap-6 mb-10">
                 {activeLesson.quiz.options.map((opt, i) => (
-                  <button 
-                    key={i} 
-                    onClick={() => setSelectedOption(i)}
-                    className={`p-6 border-2 border-black font-bold text-left text-xl transition-all ${selectedOption === i ? 'bg-[#90EE90] translate-x-2 translate-y-2 shadow-none' : 'bg-white neo-shadow active:translate-x-1 active:translate-y-1'}`}
-                  >
+                  <button key={i} onClick={() => setSelectedOption(i)} className={`p-6 border-2 border-black font-bold text-left text-xl transition-all ${selectedOption === i ? 'bg-[#90EE90] translate-x-2 translate-y-2 shadow-none' : 'bg-white neo-shadow active:translate-x-1 active:translate-y-1'}`}>
                     <span className="mr-4 opacity-40">{String.fromCharCode(65 + i)}.</span> {opt}
                   </button>
                 ))}
@@ -1429,33 +1099,48 @@ const App: React.FC = () => {
         );
 
       case 'QUIZ_SUMMARY':
-        return activeLesson && (
+        return (
           <div className="min-h-screen p-8 md:p-12 fade-in max-w-2xl mx-auto flex flex-col justify-center">
             <div className={`bg-white border-8 border-black p-12 neo-shadow-lg text-center ${quizSuccess ? 'rotate-[1deg]' : 'rotate-[-1deg]'}`}>
-              <div className="mb-8">
-                {quizSuccess ? (
-                  <div className="text-9xl mb-4">✨</div>
-                ) : (
-                  <div className="text-9xl mb-4">💀</div>
-                )}
-              </div>
-              <h2 className="text-6xl font-arcane mb-4 uppercase">
-                {quizSuccess ? t.passed : t.failed}
-              </h2>
-              <p className="text-2xl font-bold mb-8 uppercase">
-                {quizSuccess ? `${t.xpGranted} (+${earnedXp} XP)` : t.tryAgain}
-              </p>
+              <div className="mb-8">{quizSuccess ? <div className="text-9xl mb-4">✨</div> : <div className="text-9xl mb-4">💀</div>}</div>
+              <h2 className="text-6xl font-arcane mb-4 uppercase">{quizSuccess ? t.passed : t.failed}</h2>
+              <p className="text-2xl font-bold mb-8 uppercase">{quizSuccess ? `${t.xpGranted} (+${earnedXp} XP)` : t.tryAgain}</p>
               <div className="space-y-6">
-                <NeoButton onClick={() => {
-                  setSelectedOption(null);
-                  setView('ROADMAP');
-                }} className="w-full py-5 text-2xl">
-                  {quizSuccess ? t.continue : t.backRoadmap}
-                </NeoButton>
-                {!quizSuccess && (
-                  <button onClick={() => setView('LESSON')} className="text-lg font-black uppercase hover:underline">{t.reread}</button>
-                )}
+                <NeoButton onClick={() => { setSelectedOption(null); setView('ROADMAP'); }} className="w-full py-5 text-2xl">{quizSuccess ? t.continue : t.backRoadmap}</NeoButton>
+                {!quizSuccess && <button onClick={() => setView('LESSON')} className="text-lg font-black uppercase hover:underline">{t.reread}</button>}
               </div>
+            </div>
+          </div>
+        );
+        
+      case 'PROFILE':
+        return (
+          <div className="min-h-screen p-8 md:p-12 fade-in max-w-4xl mx-auto flex flex-col">
+            <NavHeader />
+            <div className="bg-white border-2 border-black p-8 neo-shadow-lg">
+              <h2 className="text-4xl font-arcane mb-8 uppercase border-b-2 border-black pb-4">{t.profile}</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+                <div className="space-y-6">
+                  <div className="border-2 border-black p-6 neo-shadow bg-[#90EE90]/20">
+                    <p className="text-xs font-black uppercase text-black/40 mb-1">Current Rank</p>
+                    <p className="text-4xl font-arcane mb-2">{currentRankName}</p>
+                    <div className="h-6 w-full progress-bar-container mb-2">
+                      <div className="progress-bar-inner" style={{ width: `${rankCompletionPercentage}%` }}></div>
+                    </div>
+                    <p className="text-xs font-bold text-right">{progress.completedCategoriesForCurrentRank.length}/{categories.length} Paths Completed</p>
+                    <p className="mt-4 font-bold text-2xl">{progress.xp} XP</p>
+                  </div>
+                  <div className="border-2 border-black p-4 neo-shadow">
+                    <p className="text-xs font-black uppercase text-black/40 mb-3">Badges & Past Ranks</p>
+                    <div className="flex flex-wrap gap-3">
+                      {progress.badges.length > 0 ? progress.badges.map((b, i) => (
+                        <div key={i} className="bg-yellow-400 border-2 border-black p-2 neo-shadow font-bold text-xs uppercase flex items-center gap-2">🏅 {b}</div>
+                      )) : <p className="font-bold text-black/30">No badges yet.</p>}
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <NeoButton onClick={handleHome} className="w-full mt-12 py-4 text-xl">{t.backRoadmap} →</NeoButton>
             </div>
           </div>
         );
@@ -1466,7 +1151,7 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className={`min-h-screen text-black transition-colors duration-300 ${isRoadmapComplete && view === 'ROADMAP' ? 'completed-theme' : ''}`}>
+    <div className={`min-h-screen text-black transition-colors duration-300 ${isCurrentRoadmapComplete && view === 'ROADMAP' ? 'completed-theme' : ''}`}>
       <GeometricBackground />
       <div className="relative z-10">
         {renderContent()}

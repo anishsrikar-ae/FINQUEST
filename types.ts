@@ -27,10 +27,11 @@ export interface Level {
 }
 
 export interface UserProgress {
-  completedLessonIds: string[];
+  completedLessonIds: string[]; // Global history of all completed lesson IDs
   xp: number;
   badges: string[];
-  completedRoadmapTitles: string[];
+  rankIndex: number; // Index in the RANKS array
+  completedCategoriesForCurrentRank: string[]; // List of category IDs completed for the CURRENT rank
   language: 'en' | 'te' | 'kn' | 'ml' | 'ta' | 'hi'; 
 }
 
