@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo, memo, useEffect, useRef } from 'react';
 import NeoButton from './components/NeoButton';
 import { Level, Lesson, UserProgress, Quiz } from './types';
@@ -289,7 +288,7 @@ const LOCALIZED_CONTENT = {
       { 
         id: 'saving-investing', 
         title: '4. സമ്പാദ്യവും നിക്ഷേപവും', 
-        description: 'പണം സുരക്ഷിതമായി വളർത്തുക. കോമ്പൗണ്ടിംഗ്, റിസ്ക് മാനേജ്മെന്റ്, സമ്പാദ്യ ഉപകരണങ്ങൾ.',
+        description: 'പണം സുരക്ഷിതമായി വളർത്തുക. കോമ്പൗണ്ടിംഗ്, റിസ്ಕ್ മാനേജ്മെന്റ്, സമ്പാദ്യ ഉപകരണങ്ങൾ.',
         topics: {
           level1: "4.1 സേവിംഗ്സ് ഓപ്ഷനുകൾ",
           level2: "4.2 റിട്ടേണുകളും കോമ്പൗണ്ടിംഗും",
@@ -466,7 +465,13 @@ const LOCALIZED_CONTENT = {
   }
 };
 
-const BASE_CATEGORIES = [
+interface BaseCategory {
+  id: string;
+  icon: string;
+  difficulty: 'Easy' | 'Medium' | 'Hard';
+}
+
+const BASE_CATEGORIES: BaseCategory[] = [
   { id: 'money-basics', icon: '💸', difficulty: 'Easy' },
   { id: 'banking', icon: '🏛️', difficulty: 'Medium' },
   { id: 'digital-payments', icon: '📱', difficulty: 'Easy' },
@@ -528,7 +533,7 @@ const TRANSLATIONS = {
     easy: 'EASY', medium: 'MEDIUM', hard: 'HARD'
   },
   te: { start: 'కొనసాగండి', login: 'లాగిన్', signup: 'సైన్ అప్', enter: 'ప్రవేశించండి', join: 'చేరండి', username: 'యూజర్ పేరు', password: 'పాస్‌వర్డ్', paths: 'మార్గాలు', profile: 'ప్రొఫైల్', store: 'స్టోర్', choosePath: 'మీ మార్గాన్ని ఎంచుకోండి', pathDesc: 'అన్ని మార్గాలను పూర్తి చేసి తదుపరి ర్యాంక్‌కు వెళ్లండి.', progress: 'ర్యాంక్ పురోగతి', completed: 'పూర్తయింది', mastered: 'నైపుణ్యం', locked: 'లాక్ చేయబడింది', begin: 'ప్రారంభించండి', retreat: 'వెనుకకు', submit: 'సమర్పించండి', continue: 'కొనసాగించండి', backRoadmap: 'తిరిగి వెళ్ళు', reread: 'మళ్ళీ చదవండి', passed: 'ఉత్తీర్ణులయ్యారు', failed: 'విఫలమయ్యారు', xpGranted: 'XP పొందారు', tryAgain: 'మళ్ళీ ప్రయత్నించండి', level: 'ర్యాంక్', settings: 'అమరికలు', language: 'భాష', notifications: 'నోటిఫికేషన్లు', account: 'ఖాతా', resources: 'వనరులు', signupCta: "ఖాతా లేదా?", loginCta: "సభ్యులేనా?", welcome: "స్వాగతం", newHere: "కొత్తవారా?", createAccount: "ఖాతా సృష్టించు", backToLogin: "లాగిన్", pathBonus: "పూర్తయింది! +500 XP", rankUpReady: "ర్యాంక్ పరీక్ష సిద్ధంగా ఉంది", takeExam: "పరీక్ష రాయండి", examDesc: "మీ నైపుణ్యాన్ని నిరూపించుకోండి.", buy: "కొనుగోలు", equip: "ధరించండి", equipped: "ధరించారు", owned: "స్వంతం", cost: "ధర", commandCenter: "కమాండ్ సెంటర్", easy: 'సులభం', medium: 'మధ్యస్థం', hard: 'కఠినం' },
-  kn: { start: 'ಮುಂದುವರಿಯಿರಿ', login: 'ಲಾಗಿನ್', signup: 'ಸೈನ್ ಅಪ್', enter: 'ಪ್ರವೇಶಿಸಿ', join: 'ಸೇರಿ', username: 'ಬಳಕೆದಾರ ಹೆಸರು', password: 'ಪಾಸ್‌ವರ್ಡ್', paths: 'ಮಾರ್ಗಗಳು', profile: 'ಪ್ರೊಫೈಲ್', store: 'ಅಂಗಡಿ', choosePath: 'ನಿಮ್ಮ ದಾರಿಯನ್ನು ಆರಿಸಿ', pathDesc: 'ಮುಂದಿನ ಹಂತಕ್ಕೆ ಹೋಗಲು ಎಲ್ಲಾ ಮಾರ್ಗಗಳನ್ನು ಪೂರ್ಣಗೊಳಿಸಿ.', progress: 'ಶ್ರೇಣಿ ಪ್ರಗತಿ', completed: 'ಪೂರ್ಣಗೊಂಡಿದೆ', mastered: 'ಕರಗತವಾಗಿದೆ', locked: 'ಲಾಕ್ ಆಗಿದೆ', begin: 'ಪ್ರಾರಂಭಿಸಿ', retreat: 'ಹಿಂದೆ', submit: 'ಸಲ್ಲಿಸಿ', continue: 'ಮುಂದುವರಿಸಿ', backRoadmap: 'ಹಿಂದಕ್ಕೆ', reread: 'ಮತ್ತೊಮ್ಮೆ ಓದಿ', passed: 'ಪಾಸಾಗಿದೆ', failed: 'ವಿಫಲವಾಗಿದೆ', xpGranted: 'XP ಲಭಿಸಿದೆ', tryAgain: 'ಮತ್ತೊಮ್ಮೆ ಪ್ರಯತ್ನಿಸಿ', level: 'ಹಂತ', settings: 'ಸೆಟ್ಟಿಂಗ್‌ಗಳು', language: 'ಭಾಷೆ', notifications: 'ಸೂಚನೆಗಳು', account: 'ಖಾತೆ', resources: 'ಸಂಪನ್ಮೂಲಗಳು', signupCta: "ಖಾತೆ ಇಲ್ಲವೇ?", loginCta: "ಈಗಾಗಲೇ ಸದಸ್ಯರೇ?", welcome: "ಸ್ವಾಗತ", newHere: "ಹೊಸಬರೇ?", createAccount: "ಖಾತೆ ತೆರೆಯಿರಿ", backToLogin: "ಲಾಗಿನ್", pathBonus: "ಪೂರ್ಣಗೊಂಡಿದೆ! +500 XP", rankUpReady: "ಶ್ರೇಣಿ ಪರೀಕ್ಷೆ ಅನ್‌ಲಾಕ್ ಆಗಿದೆ", takeExam: "ಪರೀಕ್ಷೆ ತೆಗೆದುಕೊ", examDesc: "ಮುಂದಿನ ಹಂತಕ್ಕೆ ಹೋಗಲು ಪರೀಕ್ಷೆ ಬರೆಯಿರಿ.", buy: "ಖರೀದಿಸಿ", equip: "ಬಳಸಿ", equipped: "ಬಳಸಲಾಗಿದೆ", owned: "ಸ್ವಂತ", cost: "ಬೆಲೆ", commandCenter: "ಕಮಾಂಡ್ ಸೆಂಟರ್", easy: 'ಸುಲಭ', medium: 'ಮಧ್ಯಮ', hard: 'ಕಠಿಣ' },
+  kn: { start: 'ಮುಂದುವರಿಯಿರಿ', login: 'ಲಾಗಿನ್', signup: 'ಸೈನ್ ಅಪ್', enter: 'ಪ್ರವೇಶಿಸಿ', join: 'ಸೇರಿ', username: 'ಬಳಕೆದಾರ ಹೆಸರು', password: 'ಪಾಸ್‌ವರ್ಡ್', paths: 'ಮಾರ್ಗಗಳು', profile: 'ಪ್ರೊಫైಲ್', store: 'ಅಂಗಡಿ', choosePath: 'ನಿಮ್ಮ ದಾರಿಯನ್ನು ಆರಿಸಿ', pathDesc: 'ಮುಂದಿನ ಹಂತಕ್ಕೆ ಹೋಗಲು ಎಲ್ಲಾ ಮಾರ್ಗಗಳನ್ನು ಪೂರ್ಣಗೊಳಿಸಿ.', progress: 'ಶ್ರೇಣಿ ಪ್ರಗತಿ', completed: 'ಪೂರ್ಣಗೊಂಡಿದೆ', mastered: 'ಕರಗತವಾಗಿದೆ', locked: 'ಲಾಕ್ ಆಗಿದೆ', begin: 'ಪ್ರಾರಂಭಿಸಿ', retreat: 'ಹಿಂದೆ', submit: 'ಸಲ್ಲಿಸಿ', continue: 'ಮುಂದುವರಿಸಿ', backRoadmap: 'ಹಿಂದಕ್ಕೆ', reread: 'ಮತ್ತೊಮ್ಮೆ ಓದಿ', passed: 'ಪಾಸಾಗಿದೆ', failed: 'ವಿಫಲವಾಗಿದೆ', xpGranted: 'XP ಲಭಿಸಿದೆ', tryAgain: 'ಮತ್ತೊಮ್ಮೆ ಪ್ರಯತ್ನಿಸಿ', level: 'ಹಂತ', settings: 'ಸೆಟ್ಟಿಂಗ್‌ಗಳು', language: 'ಭಾಷೆ', notifications: 'ಸೂಚನೆಗಳು', account: 'ಖಾತೆ', resources: 'ಸಂಪನ್ಮೂಲಗಳು', signupCta: "ಖಾತೆ ಇಲ್ಲವೇ?", loginCta: "ಈಗಾಗಲೇ ಸದಸ್ಯರೇ?", welcome: "ಸ್ವಾಗತ", newHere: "ಹೊಸಬರೇ?", createAccount: "ಖಾತೆ ತೆರೆಯಿರಿ", backToLogin: "ಲಾಗಿನ್", pathBonus: "ಪೂರ್ಣಗೊಂಡಿದೆ! +500 XP", rankUpReady: "ಶ್ರೇಣಿ ಪರೀಕ್ಷೆ ಅನ್‌ಲಾಕ್ ಆಗಿದೆ", takeExam: "ಪರೀಕ್ಷೆ ತೆಗೆದುಕೊ", examDesc: "ಮುಂದಿನ ಹಂತಕ್ಕೆ ಹೋಗಲು ಪರೀಕ್ಷೆ ಬರೆಯಿರಿ.", buy: "ಖರೀದಿಸಿ", equip: "ಬಳಸಿ", equipped: "ಬಳಸಲಾಗಿದೆ", owned: "ಸ್ವಂತ", cost: "ಬೆಲೆ", commandCenter: "ಕಮಾಂಡ್ ಸೆಂಟರ್", easy: 'ಸುಲಭ', medium: 'ಮಧ್ಯಮ', hard: 'ಕಠಿಣ' },
   ml: { start: 'തുടരുക', login: 'ലോഗിൻ', signup: 'സൈൻ അപ്പ്', enter: 'പ്രവേശിക്കുക', join: 'ചേരുക', username: 'ഉപയോക്തൃനാമം', password: 'പാസ്‌വേഡ്', paths: 'വഴികൾ', profile: 'പ്രൊഫൈൽ', store: 'സ്റ്റോർ', choosePath: 'നിങ്ങളുടെ വഴി തിരഞ്ഞെടുക്കുക', pathDesc: 'അടുത്ത റാങ്കിലേക്ക് പോകാൻ എല്ലാ വഴികളും പൂർത്തിയാക്കുക.', progress: 'റാങ്ക് പുരോഗതി', completed: 'പൂർത്തിയായി', mastered: 'നേടി', locked: 'ലോക്ക് ചെയ്തു', begin: 'തുടങ്ങുക', retreat: 'പിന്നോട്ട്', submit: 'സമർപ്പിക്കുക', continue: 'തുടരുക', backRoadmap: 'തിരികെ', reread: 'വീണ്ടും വായിക്കുക', passed: 'വിജയിച്ചു', failed: 'പരാജയപ്പെട്ടു', xpGranted: 'XP ലഭിച്ചു', tryAgain: 'വീണ്ടും ശ്രമിക്കുക', level: 'റാങ്ക്', settings: 'ക്രമീകരണങ്ങൾ', language: 'ഭാഷ', notifications: 'അറിയിപ്പുകൾ', account: 'അക്കൗണ്ട്', resources: 'വിഭവങ്ങൾ', signupCta: "അക്കൗണ്ട് ഇല്ലേ?", loginCta: "അംഗമാണോ?", welcome: "സ്വാഗതം", newHere: "പുതിയ ആളാണോ?", createAccount: "അക്കൗണ്ട് ഉണ്ടാക്കുക", backToLogin: "ലോഗിൻ", pathBonus: "പൂർത്തിയായി! +500 XP", rankUpReady: "റാങ്ക് പരീക്ഷ തയ്യാറാണ്", takeExam: "പരീക്ഷ എഴുതുക", examDesc: "അടുത്ത റാങ്കിലേക്ക് പോകാൻ യോഗ്യത തെളിയിക്കുക.", buy: "വാങ്ങുക", equip: "ഉപയോഗിക്കുക", equipped: "ഉപയോഗിക്കുന്നു", owned: "സ്വന്തം", cost: "വില", commandCenter: "കമാൻഡ് സെന്റർ", easy: 'ലളിതം', medium: 'ഇടത്തരം', hard: 'കഠിനം' },
   ta: { start: 'தொடரவும்', login: 'உள்நுழைக', signup: 'பதிவு', enter: 'உள்ளிடவும்', join: 'சேரவும்', username: 'பயனர்பெயர்', password: 'கடவுச்சொல்', paths: 'வழிகள்', profile: 'சுயவிவரம்', store: 'கடை', choosePath: 'உங்கள் வழியைத் தேர்வுசெய்க', pathDesc: 'அடுத்த நிலைக்குச் செல்ல அனைத்து வழிகளையும் முடிக்கவும்.', progress: 'தர முன்னேற்றம்', completed: 'முடிந்தது', mastered: 'தேர்ச்சி', locked: 'பூட்டப்பட்டது', begin: 'தொடங்கவும்', retreat: 'பின்வாங்கு', submit: 'சமர்ப்பிக்கவும்', continue: 'தொடரவும்', backRoadmap: 'திரும்பிச் செல்', reread: 'மீண்டும் படி', passed: 'தேர்ச்சி', failed: 'தோல்வி', xpGranted: 'XP வழங்கப்பட்டது', tryAgain: 'மீண்டும் முயற்சிக்கவும்', level: 'தரம்', settings: 'அமைப்புகள்', language: 'மொழி', notifications: 'அறிவிப்புகள்', account: 'கணக்கு', resources: 'வளங்கள்', signupCta: "கணக்கு இல்லையா?", loginCta: "ஏற்கனவே உறுப்பினரா?", welcome: "வரவேற்பு", newHere: "புதியவரா?", createAccount: "கணக்கை உருவாக்கு", backToLogin: "உள்நுழைக", pathBonus: "முடிந்தது! +500 XP", rankUpReady: "தேர்வு தயார்", takeExam: "தேர்வை எழுதுங்கள்", examDesc: "அடுத்த நிலைக்குச் செல்ல உங்கள் திறமையை நிரூபிக்கவும்.", buy: "வாங்க", equip: "பயன்படுத்து", equipped: "பயன்பாட்டில்", owned: "சொந்தம்", cost: "விலை", commandCenter: "கட்டளை மையம்", easy: 'எளிது', medium: 'நடுத்தரம்', hard: 'கடினம்' },
   hi: { start: 'आगे बढ़ें', login: 'लॉग इन', signup: 'साइन अप', enter: 'प्रवेश करें', join: 'शामिल हों', username: 'यूज़रनेम', password: 'पासवर्ड', paths: 'रास्ते', profile: 'प्रोफ़ाइल', store: 'स्टोर', choosePath: 'अपना रास्ता चुनें', pathDesc: 'अगले रैंक पर जाने के लिए सभी रास्ते पूरे करें।', progress: 'रैंक प्रगति', completed: 'पूरा हुआ', mastered: 'महारत हासिल', locked: 'बंद है', begin: 'ट्रायल शुरू करें', retreat: 'पीछे हटें', submit: 'उत्तर जमा करें', continue: 'जारी रखें', backRoadmap: 'वापस जाएं', reread: 'फिर से पढ़ें', passed: 'पास', failed: 'फेल', xpGranted: 'XP मिला', tryAgain: 'फिर से कोशिश करें', level: 'रैंक', settings: 'सेटिंग्स', language: 'भाषा', notifications: 'सूचनाएं', account: 'खाता', resources: 'संसाधन', signupCta: "खाता नहीं है?", loginCta: "पहले से सदस्य हैं?", welcome: "स्वागत है", newHere: "नए हैं?", createAccount: "खाता बनाएं", backToLogin: "लॉग इन", pathBonus: "पथ पूरा हुआ! +500 XP", rankUpReady: "रैंक परीक्षा अनलॉक", takeExam: "परीक्षा दें", examDesc: "अगले रैंक पर जाने के लिए परीक्षा पास करें।", buy: "खरीदें", equip: "इस्तेमाल करें", equipped: "इस्तेमाल में", owned: "स्वामित्व", cost: "लागत", commandCenter: "कमांड सेंटर", easy: 'आसान', medium: 'मध्यम', hard: 'कठिन' }
@@ -544,12 +549,38 @@ const GeminiStar: React.FC<{ style: React.CSSProperties }> = ({ style }) => (
   </svg>
 );
 
+type ShapeElement = {
+  id: string;
+  type: string;
+  color: string;
+  size: number;
+  left: number;
+  top: number;
+  duration: number;
+  delay: number;
+  driftX: number;
+  driftY: number;
+  isStar: false;
+};
+
+type StarElement = {
+  id: string;
+  size: number;
+  left: number;
+  top: number;
+  duration: number;
+  delay: number;
+  isStar: true;
+};
+
+type BackgroundElement = ShapeElement | StarElement;
+
 const GeometricBackground = memo(() => {
   const elements = useMemo(() => {
     const types = ['circle', 'square', 'triangle', 'rectangle'];
     const colors = ['bg-white', 'bg-[#90EE90]', 'bg-[#FFD700]', 'bg-black/10'];
     
-    const shapes = Array.from({ length: 24 }).map((_, i) => ({
+    const shapes: ShapeElement[] = Array.from({ length: 24 }).map((_, i) => ({
       id: `shape-${i}`,
       type: types[Math.floor(Math.random() * types.length)],
       color: colors[Math.floor(Math.random() * colors.length)],
@@ -563,7 +594,7 @@ const GeometricBackground = memo(() => {
       isStar: false
     }));
 
-    const stars = Array.from({ length: 50 }).map((_, i) => ({
+    const stars: StarElement[] = Array.from({ length: 50 }).map((_, i) => ({
       id: `star-${i}`,
       size: 12 + Math.random() * 22,
       left: Math.random() * 100,
@@ -573,7 +604,7 @@ const GeometricBackground = memo(() => {
       isStar: true
     }));
 
-    return [...shapes, ...stars];
+    return [...shapes, ...stars] as BackgroundElement[];
   }, []);
 
   return (
@@ -626,6 +657,21 @@ const RANK_ORDER = [
   'Grandmaster'
 ];
 
+type FullUserProgress = UserProgress & { categoryProgress: Record<string, number>, completedRoadmapTitles?: string[] };
+
+const DEFAULT_PROGRESS: FullUserProgress = { 
+  completedLessonIds: [], 
+  xp: 0, 
+  badges: [], 
+  rankIndex: 0, 
+  completedCategoriesForCurrentRank: [], 
+  completedRoadmapTitles: [], 
+  categoryProgress: {}, 
+  language: 'en', 
+  inventory: ['banner_classic'], 
+  equippedBanner: 'banner_classic' 
+};
+
 const App: React.FC = () => {
   const [view, setView] = useState<ViewState>('START');
   const [isLoginMode, setIsLoginMode] = useState(true);
@@ -638,18 +684,7 @@ const App: React.FC = () => {
   const [currentCategory, setCurrentCategory] = useState('');
   const [activeLesson, setActiveLesson] = useState<Lesson | null>(null);
   
-  const [progress, setProgress] = useState<UserProgress & { categoryProgress: Record<string, number> }>({ 
-    completedLessonIds: [], 
-    xp: 0, 
-    badges: [],
-    rankIndex: 0,
-    completedCategoriesForCurrentRank: [],
-    completedRoadmapTitles: [],
-    categoryProgress: {},
-    language: 'en',
-    inventory: ['banner_classic'],
-    equippedBanner: 'banner_classic'
-  });
+  const [progress, setProgress] = useState<FullUserProgress>(DEFAULT_PROGRESS);
 
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
   const [quizSuccess, setQuizSuccess] = useState(false);
@@ -697,7 +732,7 @@ const App: React.FC = () => {
   }, [defaultLevels, currentCategory]);
 
   useEffect(() => {
-    const audio = new Audio('https://stream.zeno.fm/0r0xa792kwzuv'); 
+    const audio = new Audio('https://cdn.pixabay.com/audio/2022/05/27/audio_1808fbf07a.mp3'); 
     audio.loop = true;
     audio.volume = 0.12;
     audioRef.current = audio;
@@ -707,6 +742,14 @@ const App: React.FC = () => {
   useEffect(() => {
     if (audioRef.current) audioRef.current.muted = isMuted;
   }, [isMuted]);
+
+  // Save Progress to LocalStorage whenever it changes, if user is logged in
+  useEffect(() => {
+    if (username.trim() && view !== 'START' && view !== 'AUTH') {
+      const storageKey = `finquest_user_${username.trim()}`;
+      localStorage.setItem(storageKey, JSON.stringify(progress));
+    }
+  }, [progress, username, view]);
 
   const handleStartMusic = () => {
     if (audioRef.current && !audioInitialized) {
@@ -756,7 +799,32 @@ const App: React.FC = () => {
 
   const handleAuth = (e: React.FormEvent) => {
     e.preventDefault();
-    if (username.trim() && password.trim()) setView('HOME');
+    if (username.trim() && password.trim()) {
+      const storageKey = `finquest_user_${username.trim()}`;
+      const savedData = localStorage.getItem(storageKey);
+      
+      if (savedData) {
+        try {
+          const parsed = JSON.parse(savedData);
+          // Merge with default to ensure all required fields are present
+          setProgress({ ...DEFAULT_PROGRESS, ...parsed });
+        } catch (e) {
+          console.error("Failed to load save", e);
+          setProgress(DEFAULT_PROGRESS);
+        }
+      } else {
+        // New user
+        setProgress(DEFAULT_PROGRESS);
+      }
+      setView('HOME');
+    }
+  };
+
+  const handleLogout = () => {
+    setUsername('');
+    setPassword('');
+    setProgress(DEFAULT_PROGRESS);
+    setView('START');
   };
 
   const handleSelectCategory = async (cat: Category) => {
@@ -1030,7 +1098,7 @@ const App: React.FC = () => {
                     </div>
 
                     <div className="border-t-2 border-black pt-8">
-                       <button onClick={() => setView('START')} className="text-red-500 font-black uppercase text-xl hover:underline">LOG OUT</button>
+                       <button onClick={handleLogout} className="text-red-500 font-black uppercase text-xl hover:underline">LOG OUT</button>
                     </div>
                  </div>
                  <NeoButton onClick={goToHub} className="w-full mt-12 py-4 text-xl">BACK TO HUB →</NeoButton>
