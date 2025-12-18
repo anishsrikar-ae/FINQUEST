@@ -1,6 +1,6 @@
 import React, { useState, useMemo, memo, useEffect, useRef } from 'react';
 import NeoButton from './components/NeoButton';
-import { Level, Lesson, UserProgress, Quiz } from './types';
+import { Level, Lesson, UserProgress, Quiz, Notification } from './types';
 import { generateCustomRoadmap, generateRankExam } from './services/geminiService';
 
 type ViewState = 'START' | 'AUTH' | 'HOME' | 'ONBOARDING' | 'LOADING' | 'ROADMAP' | 'LESSON' | 'QUIZ' | 'PROFILE' | 'QUIZ_SUMMARY' | 'RANK_EXAM' | 'RANK_SUCCESS' | 'STORE' | 'SETTINGS';
@@ -22,24 +22,39 @@ interface Category {
 interface StoreItem {
   id: string;
   name: string;
-  type: 'banner' | 'badge';
+  type: 'banner' | 'badge' | 'music';
   cost: number;
   description: string;
-  value: string; // CSS class for banner, Emoji/Text for badge
+  value: string; // CSS class for banner, Emoji for badge, URL for music
 }
 
+const MUSIC_TRACKS: Record<string, string> = {
+  'music_chill': 'https://cdn.pixabay.com/audio/2022/05/27/audio_1808fbf07a.mp3',
+  'music_upbeat': 'https://cdn.pixabay.com/audio/2022/01/18/audio_d0a13f69d0.mp3', // Funky
+  'music_synth': 'https://cdn.pixabay.com/audio/2021/11/24/audio_c50d56c502.mp3', // Synthwave
+  'music_epic': 'https://cdn.pixabay.com/audio/2022/03/24/audio_34e0c3eb1d.mp3' // Cinematic
+};
+
 const STORE_ITEMS: StoreItem[] = [
+  // Banners
   { id: 'banner_classic', name: 'Classic Green', type: 'banner', cost: 0, description: 'The standard look.', value: 'bg-[#90EE90]/20' },
   { id: 'banner_fire', name: 'Inferno', type: 'banner', cost: 500, description: 'Blazing path.', value: 'bg-gradient-to-r from-red-500/20 to-yellow-500/20' },
   { id: 'banner_ocean', name: 'Deep Ocean', type: 'banner', cost: 500, description: 'Calm waters.', value: 'bg-gradient-to-r from-blue-500/20 to-cyan-400/20' },
   { id: 'banner_gold', name: 'Midas Touch', type: 'banner', cost: 1000, description: 'Pure luxury.', value: 'bg-gradient-to-r from-yellow-400/30 to-yellow-600/30' },
   { id: 'banner_void', name: 'The Void', type: 'banner', cost: 2000, description: 'For the elite.', value: 'bg-black/10' },
   
+  // Badges
   { id: 'badge_bull', name: 'Bull Market', type: 'badge', cost: 250, description: 'Optimistic!', value: '📈' },
   { id: 'badge_bear', name: 'Bear Hug', type: 'badge', cost: 250, description: 'Safe & Sound.', value: '🐻' },
   { id: 'badge_rich', name: 'Rich Cat', type: 'badge', cost: 500, description: 'Meow money.', value: '😼' },
   { id: 'badge_diamond', name: 'Diamond Hands', type: 'badge', cost: 1000, description: 'Hold tight.', value: '💎' },
   { id: 'badge_rocket', name: 'To The Moon', type: 'badge', cost: 1500, description: 'No limits.', value: '🚀' },
+
+  // Music
+  { id: 'music_chill', name: 'Lofi Study', type: 'music', cost: 0, description: 'Relaxing beats.', value: MUSIC_TRACKS['music_chill'] },
+  { id: 'music_upbeat', name: 'Funky Fresh', type: 'music', cost: 400, description: 'Get moving.', value: MUSIC_TRACKS['music_upbeat'] },
+  { id: 'music_synth', name: 'Neon Night', type: 'music', cost: 600, description: 'Cyberpunk vibes.', value: MUSIC_TRACKS['music_synth'] },
+  { id: 'music_epic', name: 'Grand Quest', type: 'music', cost: 800, description: 'Heroic moments.', value: MUSIC_TRACKS['music_epic'] },
 ];
 
 const LOCALIZED_CONTENT = {
@@ -465,13 +480,11 @@ const LOCALIZED_CONTENT = {
   }
 };
 
-interface BaseCategory {
+const BASE_CATEGORIES: {
   id: string;
   icon: string;
   difficulty: 'Easy' | 'Medium' | 'Hard';
-}
-
-const BASE_CATEGORIES: BaseCategory[] = [
+}[] = [
   { id: 'money-basics', icon: '💸', difficulty: 'Easy' },
   { id: 'banking', icon: '🏛️', difficulty: 'Medium' },
   { id: 'digital-payments', icon: '📱', difficulty: 'Easy' },
@@ -529,14 +542,16 @@ const TRANSLATIONS = {
     equipped: "EQUIPPED",
     owned: "OWNED",
     cost: "COST",
-    commandCenter: "COMMAND CENTER",
-    easy: 'EASY', medium: 'MEDIUM', hard: 'HARD'
+    home: "HOME",
+    easy: 'EASY', medium: 'MEDIUM', hard: 'HARD',
+    bgMusic: "BACKGROUND MUSIC",
+    noNotifs: "No new notifications."
   },
-  te: { start: 'కొనసాగండి', login: 'లాగిన్', signup: 'సైన్ అప్', enter: 'ప్రవేశించండి', join: 'చేరండి', username: 'యూజర్ పేరు', password: 'పాస్‌వర్డ్', paths: 'మార్గాలు', profile: 'ప్రొఫైల్', store: 'స్టోర్', choosePath: 'మీ మార్గాన్ని ఎంచుకోండి', pathDesc: 'అన్ని మార్గాలను పూర్తి చేసి తదుపరి ర్యాంక్‌కు వెళ్లండి.', progress: 'ర్యాంక్ పురోగతి', completed: 'పూర్తయింది', mastered: 'నైపుణ్యం', locked: 'లాక్ చేయబడింది', begin: 'ప్రారంభించండి', retreat: 'వెనుకకు', submit: 'సమర్పించండి', continue: 'కొనసాగించండి', backRoadmap: 'తిరిగి వెళ్ళు', reread: 'మళ్ళీ చదవండి', passed: 'ఉత్తీర్ణులయ్యారు', failed: 'విఫలమయ్యారు', xpGranted: 'XP పొందారు', tryAgain: 'మళ్ళీ ప్రయత్నించండి', level: 'ర్యాంక్', settings: 'అమరికలు', language: 'భాష', notifications: 'నోటిఫికేషన్లు', account: 'ఖాతా', resources: 'వనరులు', signupCta: "ఖాతా లేదా?", loginCta: "సభ్యులేనా?", welcome: "స్వాగతం", newHere: "కొత్తవారా?", createAccount: "ఖాతా సృష్టించు", backToLogin: "లాగిన్", pathBonus: "పూర్తయింది! +500 XP", rankUpReady: "ర్యాంక్ పరీక్ష సిద్ధంగా ఉంది", takeExam: "పరీక్ష రాయండి", examDesc: "మీ నైపుణ్యాన్ని నిరూపించుకోండి.", buy: "కొనుగోలు", equip: "ధరించండి", equipped: "ధరించారు", owned: "స్వంతం", cost: "ధర", commandCenter: "కమాండ్ సెంటర్", easy: 'సులభం', medium: 'మధ్యస్థం', hard: 'కఠినం' },
-  kn: { start: 'ಮುಂದುವರಿಯಿರಿ', login: 'ಲಾಗಿನ್', signup: 'ಸೈನ್ ಅಪ್', enter: 'ಪ್ರವೇಶಿಸಿ', join: 'ಸೇರಿ', username: 'ಬಳಕೆದಾರ ಹೆಸರು', password: 'ಪಾಸ್‌ವರ್ಡ್', paths: 'ಮಾರ್ಗಗಳು', profile: 'ಪ್ರೊಫైಲ್', store: 'ಅಂಗಡಿ', choosePath: 'ನಿಮ್ಮ ದಾರಿಯನ್ನು ಆರಿಸಿ', pathDesc: 'ಮುಂದಿನ ಹಂತಕ್ಕೆ ಹೋಗಲು ಎಲ್ಲಾ ಮಾರ್ಗಗಳನ್ನು ಪೂರ್ಣಗೊಳಿಸಿ.', progress: 'ಶ್ರೇಣಿ ಪ್ರಗತಿ', completed: 'ಪೂರ್ಣಗೊಂಡಿದೆ', mastered: 'ಕರಗತವಾಗಿದೆ', locked: 'ಲಾಕ್ ಆಗಿದೆ', begin: 'ಪ್ರಾರಂಭಿಸಿ', retreat: 'ಹಿಂದೆ', submit: 'ಸಲ್ಲಿಸಿ', continue: 'ಮುಂದುವರಿಸಿ', backRoadmap: 'ಹಿಂದಕ್ಕೆ', reread: 'ಮತ್ತೊಮ್ಮೆ ಓದಿ', passed: 'ಪಾಸಾಗಿದೆ', failed: 'ವಿಫಲವಾಗಿದೆ', xpGranted: 'XP ಲಭಿಸಿದೆ', tryAgain: 'ಮತ್ತೊಮ್ಮೆ ಪ್ರಯತ್ನಿಸಿ', level: 'ಹಂತ', settings: 'ಸೆಟ್ಟಿಂಗ್‌ಗಳು', language: 'ಭಾಷೆ', notifications: 'ಸೂಚನೆಗಳು', account: 'ಖಾತೆ', resources: 'ಸಂಪನ್ಮೂಲಗಳು', signupCta: "ಖಾತೆ ಇಲ್ಲವೇ?", loginCta: "ಈಗಾಗಲೇ ಸದಸ್ಯರೇ?", welcome: "ಸ್ವಾಗತ", newHere: "ಹೊಸಬರೇ?", createAccount: "ಖಾತೆ ತೆರೆಯಿರಿ", backToLogin: "ಲಾಗಿನ್", pathBonus: "ಪೂರ್ಣಗೊಂಡಿದೆ! +500 XP", rankUpReady: "ಶ್ರೇಣಿ ಪರೀಕ್ಷೆ ಅನ್‌ಲಾಕ್ ಆಗಿದೆ", takeExam: "ಪರೀಕ್ಷೆ ತೆಗೆದುಕೊ", examDesc: "ಮುಂದಿನ ಹಂತಕ್ಕೆ ಹೋಗಲು ಪರೀಕ್ಷೆ ಬರೆಯಿರಿ.", buy: "ಖರೀದಿಸಿ", equip: "ಬಳಸಿ", equipped: "ಬಳಸಲಾಗಿದೆ", owned: "ಸ್ವಂತ", cost: "ಬೆಲೆ", commandCenter: "ಕಮಾಂಡ್ ಸೆಂಟರ್", easy: 'ಸುಲಭ', medium: 'ಮಧ್ಯಮ', hard: 'ಕಠಿಣ' },
-  ml: { start: 'തുടരുക', login: 'ലോഗിൻ', signup: 'സൈൻ അപ്പ്', enter: 'പ്രവേശിക്കുക', join: 'ചേരുക', username: 'ഉപയോക്തൃനാമം', password: 'പാസ്‌വേഡ്', paths: 'വഴികൾ', profile: 'പ്രൊഫൈൽ', store: 'സ്റ്റോർ', choosePath: 'നിങ്ങളുടെ വഴി തിരഞ്ഞെടുക്കുക', pathDesc: 'അടുത്ത റാങ്കിലേക്ക് പോകാൻ എല്ലാ വഴികളും പൂർത്തിയാക്കുക.', progress: 'റാങ്ക് പുരോഗതി', completed: 'പൂർത്തിയായി', mastered: 'നേടി', locked: 'ലോക്ക് ചെയ്തു', begin: 'തുടങ്ങുക', retreat: 'പിന്നോട്ട്', submit: 'സമർപ്പിക്കുക', continue: 'തുടരുക', backRoadmap: 'തിരികെ', reread: 'വീണ്ടും വായിക്കുക', passed: 'വിജയിച്ചു', failed: 'പരാജയപ്പെട്ടു', xpGranted: 'XP ലഭിച്ചു', tryAgain: 'വീണ്ടും ശ്രമിക്കുക', level: 'റാങ്ക്', settings: 'ക്രമീകരണങ്ങൾ', language: 'ഭാഷ', notifications: 'അറിയിപ്പുകൾ', account: 'അക്കൗണ്ട്', resources: 'വിഭവങ്ങൾ', signupCta: "അക്കൗണ്ട് ഇല്ലേ?", loginCta: "അംഗമാണോ?", welcome: "സ്വാഗതം", newHere: "പുതിയ ആളാണോ?", createAccount: "അക്കൗണ്ട് ഉണ്ടാക്കുക", backToLogin: "ലോഗിൻ", pathBonus: "പൂർത്തിയായി! +500 XP", rankUpReady: "റാങ്ക് പരീക്ഷ തയ്യാറാണ്", takeExam: "പരീക്ഷ എഴുതുക", examDesc: "അടുത്ത റാങ്കിലേക്ക് പോകാൻ യോഗ്യത തെളിയിക്കുക.", buy: "വാങ്ങുക", equip: "ഉപയോഗിക്കുക", equipped: "ഉപയോഗിക്കുന്നു", owned: "സ്വന്തം", cost: "വില", commandCenter: "കമാൻഡ് സെന്റർ", easy: 'ലളിതം', medium: 'ഇടത്തരം', hard: 'കഠിനം' },
-  ta: { start: 'தொடரவும்', login: 'உள்நுழைக', signup: 'பதிவு', enter: 'உள்ளிடவும்', join: 'சேரவும்', username: 'பயனர்பெயர்', password: 'கடவுச்சொல்', paths: 'வழிகள்', profile: 'சுயவிவரம்', store: 'கடை', choosePath: 'உங்கள் வழியைத் தேர்வுசெய்க', pathDesc: 'அடுத்த நிலைக்குச் செல்ல அனைத்து வழிகளையும் முடிக்கவும்.', progress: 'தர முன்னேற்றம்', completed: 'முடிந்தது', mastered: 'தேர்ச்சி', locked: 'பூட்டப்பட்டது', begin: 'தொடங்கவும்', retreat: 'பின்வாங்கு', submit: 'சமர்ப்பிக்கவும்', continue: 'தொடரவும்', backRoadmap: 'திரும்பிச் செல்', reread: 'மீண்டும் படி', passed: 'தேர்ச்சி', failed: 'தோல்வி', xpGranted: 'XP வழங்கப்பட்டது', tryAgain: 'மீண்டும் முயற்சிக்கவும்', level: 'தரம்', settings: 'அமைப்புகள்', language: 'மொழி', notifications: 'அறிவிப்புகள்', account: 'கணக்கு', resources: 'வளங்கள்', signupCta: "கணக்கு இல்லையா?", loginCta: "ஏற்கனவே உறுப்பினரா?", welcome: "வரவேற்பு", newHere: "புதியவரா?", createAccount: "கணக்கை உருவாக்கு", backToLogin: "உள்நுழைக", pathBonus: "முடிந்தது! +500 XP", rankUpReady: "தேர்வு தயார்", takeExam: "தேர்வை எழுதுங்கள்", examDesc: "அடுத்த நிலைக்குச் செல்ல உங்கள் திறமையை நிரூபிக்கவும்.", buy: "வாங்க", equip: "பயன்படுத்து", equipped: "பயன்பாட்டில்", owned: "சொந்தம்", cost: "விலை", commandCenter: "கட்டளை மையம்", easy: 'எளிது', medium: 'நடுத்தரம்', hard: 'கடினம்' },
-  hi: { start: 'आगे बढ़ें', login: 'लॉग इन', signup: 'साइन अप', enter: 'प्रवेश करें', join: 'शामिल हों', username: 'यूज़रनेम', password: 'पासवर्ड', paths: 'रास्ते', profile: 'प्रोफ़ाइल', store: 'स्टोर', choosePath: 'अपना रास्ता चुनें', pathDesc: 'अगले रैंक पर जाने के लिए सभी रास्ते पूरे करें।', progress: 'रैंक प्रगति', completed: 'पूरा हुआ', mastered: 'महारत हासिल', locked: 'बंद है', begin: 'ट्रायल शुरू करें', retreat: 'पीछे हटें', submit: 'उत्तर जमा करें', continue: 'जारी रखें', backRoadmap: 'वापस जाएं', reread: 'फिर से पढ़ें', passed: 'पास', failed: 'फेल', xpGranted: 'XP मिला', tryAgain: 'फिर से कोशिश करें', level: 'रैंक', settings: 'सेटिंग्स', language: 'भाषा', notifications: 'सूचनाएं', account: 'खाता', resources: 'संसाधन', signupCta: "खाता नहीं है?", loginCta: "पहले से सदस्य हैं?", welcome: "स्वागत है", newHere: "नए हैं?", createAccount: "खाता बनाएं", backToLogin: "लॉग इन", pathBonus: "पथ पूरा हुआ! +500 XP", rankUpReady: "रैंक परीक्षा अनलॉक", takeExam: "परीक्षा दें", examDesc: "अगले रैंक पर जाने के लिए परीक्षा पास करें।", buy: "खरीदें", equip: "इस्तेमाल करें", equipped: "इस्तेमाल में", owned: "स्वामित्व", cost: "लागत", commandCenter: "कमांड सेंटर", easy: 'आसान', medium: 'मध्यम', hard: 'कठिन' }
+  te: { start: 'కొనసాగండి', login: 'లాగిన్', signup: 'సైన్ అప్', enter: 'ప్రవేశించండి', join: 'చేరండి', username: 'యూజర్ పేరు', password: 'పాస్‌వర్డ్', paths: 'మార్గాలు', profile: 'ప్రొఫైల్', store: 'స్టోర్', choosePath: 'మీ మార్గాన్ని ఎంచుకోండి', pathDesc: 'అన్ని మార్గాలను పూర్తి చేసి తదుపరి ర్యాంక్‌కు వెళ్లండి.', progress: 'ర్యాంక్ పురోగతి', completed: 'పూర్తయింది', mastered: 'నైపుణ్యం', locked: 'లాక్ చేయబడింది', begin: 'ప్రారంభించండి', retreat: 'వెనుకకు', submit: 'సమర్పించండి', continue: 'కొనసాగించండి', backRoadmap: 'తిరిగి వెళ్ళు', reread: 'మళ్ళీ చదవండి', passed: 'ఉత్తీర్ణులయ్యారు', failed: 'విఫలమయ్యారు', xpGranted: 'XP పొందారు', tryAgain: 'మళ్ళీ ప్రయత్నించండి', level: 'ర్యాంక్', settings: 'అమరికలు', language: 'భాష', notifications: 'నోటిఫికేషన్లు', account: 'ఖాతా', resources: 'వనరులు', signupCta: "ఖాతా లేదా?", loginCta: "సభ్యులేనా?", welcome: "స్వాగతం", newHere: "కొత్తవారా?", createAccount: "ఖాతా సృష్టించు", backToLogin: "లాగిన్", pathBonus: "పూర్తయింది! +500 XP", rankUpReady: "ర్యాంక్ పరీక్ష సిద్ధంగా ఉంది", takeExam: "పరీక్ష రాయండి", examDesc: "మీ నైపుణ్యాన్ని నిరూపించుకోండి.", buy: "కొనుగోలు", equip: "ధరించండి", equipped: "ధరించారు", owned: "స్వంతం", cost: "ధర", home: "హోమ్", easy: 'సులభం', medium: 'మధ్యస్థం', hard: 'కఠినం', bgMusic: "నేపథ్య సంగీతం", noNotifs: "నోటిఫికేషన్లు లేవు." },
+  kn: { start: 'ಮುಂದುವರಿಯಿರಿ', login: 'ಲಾಗಿನ್', signup: 'ಸೈನ್ ಅಪ್', enter: 'ಪ್ರವೇಶಿಸಿ', join: 'ಸೇರಿ', username: 'ಬಳಕೆದಾರ ಹೆಸರು', password: 'ಪಾಸ್‌ವರ್ಡ್', paths: 'ಮಾರ್ಗಗಳು', profile: 'ಪ್ರೊಫైಲ್', store: 'ಅಂಗಡಿ', choosePath: 'ನಿಮ್ಮ ದಾರಿಯನ್ನು ಆರಿಸಿ', pathDesc: 'ಮುಂದಿನ ಹಂತಕ್ಕೆ ಹೋಗಲು ಎಲ್ಲಾ ಮಾರ್ಗಗಳನ್ನು ಪೂರ್ಣಗೊಳಿಸಿ.', progress: 'ಶ್ರೇಣಿ ಪ್ರಗತಿ', completed: 'ಪೂರ್ಣಗೊಂಡಿದೆ', mastered: 'ಕರಗತವಾಗಿದೆ', locked: 'ಲಾಕ್ ಆಗಿದೆ', begin: 'ಪ್ರಾರಂಭಿಸಿ', retreat: 'ಹಿಂದೆ', submit: 'ಸಲ್ಲಿಸಿ', continue: 'ಮುಂದುವರಿಸಿ', backRoadmap: 'ಹಿಂದಕ್ಕೆ', reread: 'ಮತ್ತೊಮ್ಮೆ ಓದಿ', passed: 'ಪಾಸಾಗಿದೆ', failed: 'ವಿಫಲವಾಗಿದೆ', xpGranted: 'XP ಲಭಿಸಿದೆ', tryAgain: 'ಮತ್ತೊಮ್ಮೆ ಪ್ರಯತ್ನಿಸಿ', level: 'ಹಂತ', settings: 'ಸೆಟ್ಟಿಂಗ್‌ಗಳು', language: 'ಭಾಷೆ', notifications: 'ಸೂಚನೆಗಳು', account: 'ಖಾತೆ', resources: 'ಸಂಪನ್ಮೂಲಗಳು', signupCta: "ಖಾತೆ ಇಲ್ಲವೇ?", loginCta: "ಈಗಾಗಲೇ ಸದಸ್ಯರೇ?", welcome: "ಸ್ವಾಗತ", newHere: "ಹೊಸಬರೇ?", createAccount: "ಖಾತೆ ತೆರೆಯಿರಿ", backToLogin: "ಲಾಗಿನ್", pathBonus: "ಪೂರ್ಣಗೊಂಡಿದೆ! +500 XP", rankUpReady: "ಶ್ರೇಣಿ ಪರೀಕ್ಷೆ ಅನ್‌ಲಾಕ್ ಆಗಿದೆ", takeExam: "ಪರೀಕ್ಷೆ ತೆಗೆದುಕೊ", examDesc: "ಮುಂದಿನ ಹಂತಕ್ಕೆ ಹೋಗಲು ಪರೀಕ್ಷೆ ಬರೆಯಿರಿ.", buy: "ಖರೀದಿಸಿ", equip: "ಬಳಸಿ", equipped: "ಬಳಸಲಾಗಿದೆ", owned: "ಸ್ವಂತ", cost: "ಬೆಲೆ", home: "ಹೋಮ್", easy: 'ಸುಲಭ', medium: 'ಮಧ್ಯಮ', hard: 'ಕಠಿಣ', bgMusic: "ಹಿನ್ನೆಲೆ ಸಂಗೀತ", noNotifs: "ಯಾವುದೇ ಹೊಸ ಸೂಚನೆಗಳಿಲ್ಲ." },
+  ml: { start: 'തുടരുക', login: 'ലോഗിൻ', signup: 'സൈൻ അപ്പ്', enter: 'പ്രവേശിക്കുക', join: 'ചേരുക', username: 'ഉപയോക്തൃനാമം', password: 'പാസ്‌വേഡ്', paths: 'വഴികൾ', profile: 'പ്രൊഫൈൽ', store: 'സ്റ്റോർ', choosePath: 'നിങ്ങളുടെ വഴി തിരഞ്ഞെടുക്കുക', pathDesc: 'അടുത്ത റാങ്കിലേക്ക് പോകാൻ എല്ലാ വഴികളും പൂർത്തിയാക്കുക.', progress: 'റാങ്ക് പുരോഗതി', completed: 'പൂർത്തിയായി', mastered: 'നേടി', locked: 'ലോക്ക് ചെയ്തു', begin: 'തുടങ്ങുക', retreat: 'പിന്നോട്ട്', submit: 'സമർപ്പിക്കുക', continue: 'തുടരുക', backRoadmap: 'തിരികെ', reread: 'വീണ്ടും വായിക്കുക', passed: 'വിജയിച്ചു', failed: 'പരാജയപ്പെട്ടു', xpGranted: 'XP ലഭിച്ചു', tryAgain: 'വീണ്ടും ശ്രമിക്കുക', level: 'റാങ്ക്', settings: 'ക്രമീകരണങ്ങൾ', language: 'ഭാഷ', notifications: 'അറിയിപ്പുകൾ', account: 'അക്കൗണ്ട്', resources: 'വിഭവങ്ങൾ', signupCta: "അക്കൗണ്ട് ഇല്ലേ?", loginCta: "അംഗമാണോ?", welcome: "സ്വാഗതം", newHere: "പുതിയ ആളാണോ?", createAccount: "അക്കൗണ്ട് ഉണ്ടാക്കുക", backToLogin: "ലോഗിൻ", pathBonus: "പൂർത്തിയായി! +500 XP", rankUpReady: "റാങ്ക് പരീക്ഷ തയ്യാറാണ്", takeExam: "പരീക്ഷ എഴുതുക", examDesc: "അടുത്ത റാങ്കിലേക്ക് പോകാൻ യോഗ്യത തെളിയിക്കുക.", buy: "വാങ്ങുക", equip: "ഉപയോഗിക്കുക", equipped: "ഉപയോഗിക്കുന്നു", owned: "സ്വന്തം", cost: "വില", home: "ഹോം", easy: 'ലളിതം', medium: 'ഇടത്തരം', hard: 'കഠിനം', bgMusic: "പശ്ചാത്തല സംഗീതം", noNotifs: "അറിയിപ്പുകൾ ഒന്നുമില്ല." },
+  ta: { start: 'தொடரவும்', login: 'உள்நுழைக', signup: 'பதிவு', enter: 'உள்ளிடவும்', join: 'சேரவும்', username: 'பயனர்பெயர்', password: 'கடவுச்சொல்', paths: 'வழிகள்', profile: 'சுயவிவரம்', store: 'கடை', choosePath: 'உங்கள் வழியைத் தேர்வுசெய்க', pathDesc: 'அடுத்த நிலைக்குச் செல்ல அனைத்து வழிகளையும் முடிக்கவும்.', progress: 'தர முன்னேற்றம்', completed: 'முடிந்தது', mastered: 'தேர்ச்சி', locked: 'பூட்டப்பட்டது', begin: 'தொடங்கவும்', retreat: 'பின்வாங்கு', submit: 'சமர்ப்பிக்கவும்', continue: 'தொடரவும்', backRoadmap: 'திரும்பிச் செல்', reread: 'மீண்டும் படி', passed: 'தேர்ச்சி', failed: 'தோல்வி', xpGranted: 'XP வழங்கப்பட்டது', tryAgain: 'மீண்டும் முயற்சிக்கவும்', level: 'தரம்', settings: 'அமைப்புகள்', language: 'மொழி', notifications: 'அறிவிப்புகள்', account: 'கணக்கு', resources: 'வளங்கள்', signupCta: "கணக்கு இல்லையா?", loginCta: "ஏற்கனவே உறுப்பினரா?", welcome: "வரவேற்பு", newHere: "புதியவரா?", createAccount: "கணக்கை உருவாக்கு", backToLogin: "உள்நுழைக", pathBonus: "முடிந்தது! +500 XP", rankUpReady: "தேர்வு தயார்", takeExam: "தேர்வை எழுதுங்கள்", examDesc: "அடுத்த நிலைக்குச் செல்ல உங்கள் திறமையை நிரூபிக்கவும்.", buy: "வாங்க", equip: "பயன்படுத்து", equipped: "பயன்பாட்டில்", owned: "சொந்தம்", cost: "விலை", home: "முகப்பு", easy: 'எளிது', medium: 'நடுத்தரம்', hard: 'கடினம்', bgMusic: "பின்னணி இசை", noNotifs: "புதிய அறிவிப்புகள் இல்லை." },
+  hi: { start: 'आगे बढ़ें', login: 'लॉग इन', signup: 'साइन अप', enter: 'प्रवेश करें', join: 'शामिल हों', username: 'यूज़रनेम', password: 'पासवर्ड', paths: 'रास्ते', profile: 'प्रोफ़ाइल', store: 'स्टोर', choosePath: 'अपना रास्ता चुनें', pathDesc: 'अगले रैंक पर जाने के लिए सभी रास्ते पूरे करें।', progress: 'रैंक प्रगति', completed: 'पूरा हुआ', mastered: 'महारत हासिल', locked: 'बंद है', begin: 'ट्रायल शुरू करें', retreat: 'पीछे हटें', submit: 'उत्तर जमा करें', continue: 'जारी रखें', backRoadmap: 'वापस जाएं', reread: 'फिर से पढ़ें', passed: 'पास', failed: 'फेल', xpGranted: 'XP मिला', tryAgain: 'फिर से कोशिश करें', level: 'रैंक', settings: 'सेटिंग्स', language: 'भाषा', notifications: 'सूचनाएं', account: 'खाता', resources: 'संसाधन', signupCta: "खाता नहीं है?", loginCta: "पहले से सदस्य हैं?", welcome: "स्वागत है", newHere: "नए हैं?", createAccount: "खाता बनाएं", backToLogin: "लॉग इन", pathBonus: "पथ पूरा हुआ! +500 XP", rankUpReady: "रैंक परीक्षा अनलॉक", takeExam: "परीक्षा दें", examDesc: "अगले रैंक पर जाने के लिए परीक्षा पास करें।", buy: "खरीदें", equip: "इस्तेमाल करें", equipped: "इस्तेमाल में", owned: "स्वामित्व", cost: "लागत", home: "होम", easy: 'आसान', medium: 'मध्यम', hard: 'कठिन', bgMusic: "पार्श्व संगीत", noNotifs: "कोई नई सूचना नहीं।" }
 };
 
 const GeminiStar: React.FC<{ style: React.CSSProperties }> = ({ style }) => (
@@ -627,20 +642,22 @@ const GeometricBackground = memo(() => {
           );
         }
         
+        const shape = el as ShapeElement;
+        
         return (
           <div 
-            key={el.id}
-            className={`floating-shape ${el.color} ${el.type === 'circle' ? 'rounded-full' : ''}`}
+            key={shape.id}
+            className={`floating-shape ${shape.color} ${shape.type === 'circle' ? 'rounded-full' : ''}`}
             style={{
-              left: `${el.left}%`,
-              top: `${el.top}%`,
-              width: el.type === 'rectangle' ? `${el.size * 2}px` : `${el.size}px`,
-              height: `${el.size}px`,
-              animationDuration: `${el.duration}s`,
-              animationDelay: `${el.delay}s`,
-              clipPath: el.type === 'triangle' ? 'polygon(50% 0%, 0% 100%, 100% 100%)' : 'none',
-              '--drift-x': `${el.driftX}px`,
-              '--drift-y': `${el.driftY}px`
+              left: `${shape.left}%`,
+              top: `${shape.top}%`,
+              width: shape.type === 'rectangle' ? `${shape.size * 2}px` : `${shape.size}px`,
+              height: `${shape.size}px`,
+              animationDuration: `${shape.duration}s`,
+              animationDelay: `${shape.delay}s`,
+              clipPath: shape.type === 'triangle' ? 'polygon(50% 0%, 0% 100%, 100% 100%)' : 'none',
+              '--drift-x': `${shape.driftX}px`,
+              '--drift-y': `${shape.driftY}px`
             } as React.CSSProperties}
           />
         );
@@ -668,8 +685,11 @@ const DEFAULT_PROGRESS: FullUserProgress = {
   completedRoadmapTitles: [], 
   categoryProgress: {}, 
   language: 'en', 
-  inventory: ['banner_classic'], 
-  equippedBanner: 'banner_classic' 
+  inventory: ['banner_classic', 'music_chill'], 
+  equippedBanner: 'banner_classic',
+  equippedMusic: 'music_chill',
+  unlockedMusic: ['music_chill'],
+  notifications: []
 };
 
 const App: React.FC = () => {
@@ -677,9 +697,7 @@ const App: React.FC = () => {
   const [isLoginMode, setIsLoginMode] = useState(true);
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const [displayPassword, setDisplayPassword] = useState('');
-  const [maskTimeout, setMaskTimeout] = useState<any | null>(null);
-
+  
   const [roadmap, setRoadmap] = useState<Level[]>([]);
   const [currentCategory, setCurrentCategory] = useState('');
   const [activeLesson, setActiveLesson] = useState<Lesson | null>(null);
@@ -732,18 +750,34 @@ const App: React.FC = () => {
   }, [defaultLevels, currentCategory]);
 
   useEffect(() => {
-    const audio = new Audio('https://cdn.pixabay.com/audio/2022/05/27/audio_1808fbf07a.mp3'); 
+    // Initialize Audio Element
+    const audio = new Audio(MUSIC_TRACKS[progress.equippedMusic] || MUSIC_TRACKS['music_chill']); 
     audio.loop = true;
     audio.volume = 0.12;
     audioRef.current = audio;
-    return () => { if (audioRef.current) { audioRef.current.pause(); audioRef.current = null; } };
-  }, []);
+
+    if (audioInitialized && !isMuted) {
+      audio.play().catch(e => console.error(e));
+    }
+
+    return () => { 
+      if (audioRef.current) { 
+        audioRef.current.pause(); 
+        audioRef.current = null; 
+      } 
+    };
+  }, [progress.equippedMusic]); // Re-run when music changes
 
   useEffect(() => {
-    if (audioRef.current) audioRef.current.muted = isMuted;
-  }, [isMuted]);
+    if (audioRef.current) {
+      audioRef.current.muted = isMuted;
+      if (!isMuted && audioInitialized) {
+        audioRef.current.play().catch(() => {});
+      }
+    }
+  }, [isMuted, audioInitialized]);
 
-  // Save Progress to LocalStorage whenever it changes, if user is logged in
+  // Save Progress to LocalStorage
   useEffect(() => {
     if (username.trim() && view !== 'START' && view !== 'AUTH') {
       const storageKey = `finquest_user_${username.trim()}`;
@@ -751,10 +785,22 @@ const App: React.FC = () => {
     }
   }, [progress, username, view]);
 
+  const addNotification = (title: string, message: string) => {
+    const newNotif: Notification = {
+      id: Date.now().toString(),
+      title,
+      message,
+      date: new Date().toLocaleDateString(),
+      read: false
+    };
+    setProgress(prev => ({
+      ...prev,
+      notifications: [newNotif, ...prev.notifications]
+    }));
+  };
+
   const handleStartMusic = () => {
-    if (audioRef.current && !audioInitialized) {
-      audioRef.current.play().then(() => setAudioInitialized(true)).catch(e => console.error(e));
-    }
+    setAudioInitialized(true);
     setView('AUTH');
   };
 
@@ -794,6 +840,7 @@ const App: React.FC = () => {
         completedCategoriesForCurrentRank: [...prev.completedCategoriesForCurrentRank, currentCategory],
         categoryProgress: { ...prev.categoryProgress, [currentCategory]: 100 }
       }));
+      addNotification("Path Completed!", `You have mastered ${currentCategory}.`);
     }
   }, [isCurrentRoadmapComplete, currentCategory]);
 
@@ -806,15 +853,26 @@ const App: React.FC = () => {
       if (savedData) {
         try {
           const parsed = JSON.parse(savedData);
-          // Merge with default to ensure all required fields are present
           setProgress({ ...DEFAULT_PROGRESS, ...parsed });
+          // Add default notifications if missing
+          if (!parsed.notifications) {
+            setProgress(p => ({...p, notifications: []}));
+          }
         } catch (e) {
           console.error("Failed to load save", e);
           setProgress(DEFAULT_PROGRESS);
         }
       } else {
         // New user
-        setProgress(DEFAULT_PROGRESS);
+        const newProg = { ...DEFAULT_PROGRESS };
+        newProg.notifications = [{
+          id: 'welcome',
+          title: 'Welcome!',
+          message: 'Welcome to FinQuest. Start your journey by selecting a path.',
+          date: new Date().toLocaleDateString(),
+          read: false
+        }];
+        setProgress(newProg);
       }
       setView('HOME');
     }
@@ -828,7 +886,6 @@ const App: React.FC = () => {
   };
 
   const handleSelectCategory = async (cat: Category) => {
-    // If mastered for this rank, don't allow replay (or allow review mode - here we allow review)
     setCurrentCategory(cat.title);
     setView('LOADING');
     const minLoadTime = new Promise(resolve => setTimeout(resolve, 2000));
@@ -840,8 +897,6 @@ const App: React.FC = () => {
       ]);
       
       if (customRoadmap && customRoadmap.length > 0) {
-        // BUG FIX: Ensure lesson IDs are unique to the current rank + category
-        // This prevents the system from thinking a lesson is complete just because ID matches "lesson_1" from a previous rank
         const uniqueRoadmap = customRoadmap.map(level => ({
           ...level,
           lessons: level.lessons.map(lesson => ({
@@ -885,12 +940,15 @@ const App: React.FC = () => {
   };
 
   const handleBuyItem = (item: StoreItem) => {
-    if (progress.xp >= item.cost && !progress.inventory.includes(item.id)) {
+    const isOwned = (progress.inventory || []).includes(item.id);
+    
+    if (progress.xp >= item.cost && !isOwned) {
       setProgress(prev => ({
         ...prev,
         xp: prev.xp - item.cost,
         inventory: [...(prev.inventory || []), item.id]
       }));
+      addNotification("Purchase Successful", `You bought ${item.name} for ${item.cost} XP.`);
     }
   };
 
@@ -899,6 +957,11 @@ const App: React.FC = () => {
       setProgress(prev => ({
         ...prev,
         equippedBanner: item.id
+      }));
+    } else if (item.type === 'music') {
+      setProgress(prev => ({
+        ...prev,
+        equippedMusic: item.id
       }));
     }
   };
@@ -913,7 +976,6 @@ const App: React.FC = () => {
         setExamScore(0);
         setView('RANK_EXAM');
       } else {
-        // Fallback or error
         goToPaths();
       }
     } catch(e) {
@@ -931,11 +993,11 @@ const App: React.FC = () => {
       setCurrentExamQuestionIndex(i => i + 1);
     } else {
       // Exam Finished
-      // Check if score is sufficient (e.g., 3/5)
       const finalScore = selectedIndex === currentQ.correct ? examScore + 1 : examScore;
       if (finalScore >= 3) {
         // RANK UP!
         const nextRankIdx = progress.rankIndex + 1;
+        const newRankName = RANK_ORDER[nextRankIdx];
         setProgress(prev => ({
           ...prev,
           rankIndex: nextRankIdx,
@@ -944,6 +1006,7 @@ const App: React.FC = () => {
           badges: [...prev.badges, currentRankName], // Award old rank as badge
           xp: prev.xp + 1000
         }));
+        addNotification("Rank Up!", `You are now ${newRankName}. +1000 XP`);
         setView('RANK_SUCCESS');
       } else {
         // Failed
@@ -959,17 +1022,7 @@ const App: React.FC = () => {
       <div className="flex items-center gap-4">
         <button onClick={goToHub} className="text-2xl font-arcane title-main hover:scale-105 transition-transform active:scale-95">FINQUEST</button>
         <div className="hidden lg:flex items-center gap-2">
-          <div className="bg-black text-[#90EE90] px-3 py-1 border-2 border-black neo-shadow font-black uppercase text-xs">
-             {t.level}: {currentRankName}
-          </div>
-          <div className="flex flex-col gap-0.5">
-            <div className="h-6 w-32 progress-bar-container">
-              <div className="progress-bar-inner" style={{ width: `${rankCompletionPercentage}%` }}></div>
-            </div>
-            <span className="text-[10px] font-black uppercase text-right leading-none opacity-60">
-              {progress.completedCategoriesForCurrentRank.length}/{categories.length} Paths
-            </span>
-          </div>
+           <span className="text-xs font-black uppercase text-black/50">{view}</span>
         </div>
       </div>
       <div className="flex gap-3 items-center">
@@ -1037,27 +1090,67 @@ const App: React.FC = () => {
         );
 
       case 'HOME':
+         const currentBanner = STORE_ITEMS.find(i => i.id === progress.equippedBanner);
          return (
           <div className="min-h-screen p-8 md:p-12 fade-in max-w-6xl mx-auto flex flex-col">
-             <NavHeader />
+             <div className="flex justify-center mb-8">
+               <h2 className="text-6xl md:text-8xl font-arcane text-center title-main uppercase">{t.home || "HOME"}</h2>
+             </div>
+             
+             {/* Profile Card Embedded in Home */}
+             <div className="w-full max-w-3xl mx-auto bg-white border-4 border-black p-0 neo-shadow-lg mb-12 flex flex-col">
+                <div className={`h-32 w-full border-b-4 border-black relative overflow-hidden ${currentBanner ? currentBanner.value : 'bg-[#90EE90]/20'}`}>
+                   <div className="absolute top-2 right-2 bg-black text-white px-3 py-1 text-xs font-black uppercase tracking-widest">ID: {username}</div>
+                </div>
+                <div className="p-8 flex flex-col md:flex-row gap-8 items-start">
+                   <div className="flex-1 w-full">
+                      <div className="flex justify-between items-end mb-2">
+                        <span className="text-sm font-black uppercase text-black/50">Current Rank</span>
+                        <span className="text-4xl font-black text-[#90EE90] drop-shadow-[1.5px_1.5px_0_black]">{progress.xp} XP</span>
+                      </div>
+                      <h3 className="text-4xl font-arcane uppercase leading-none mb-4">{currentRankName}</h3>
+                      <div className="space-y-1 mb-6">
+                        <div className="flex justify-between text-xs font-black uppercase">
+                           <span>Rank Progress</span>
+                           <span>{rankCompletionPercentage}%</span>
+                        </div>
+                        <div className="h-6 w-full progress-bar-container">
+                           <div className="progress-bar-inner" style={{ width: `${rankCompletionPercentage}%` }}></div>
+                        </div>
+                      </div>
+                      <div>
+                         <span className="text-xs font-black uppercase text-black/50 mb-2 block">Badges</span>
+                         <div className="flex flex-wrap gap-2">
+                            {progress.badges.map((b, i) => (
+                              <span key={i} className="bg-yellow-300 border-2 border-black px-2 py-1 text-xs font-bold uppercase neo-shadow">🏅 {b}</span>
+                            ))}
+                            {(progress.inventory || []).filter(id => id.startsWith('badge')).map((badgeId, i) => {
+                               const item = STORE_ITEMS.find(it => it.id === badgeId);
+                               return item ? (
+                                 <span key={`inv_${i}`} className="bg-white border-2 border-black px-2 py-1 text-xs font-bold uppercase neo-shadow" title={item.name}>{item.value}</span>
+                               ) : null;
+                            })}
+                            {progress.badges.length === 0 && !progress.inventory.some(i => i.startsWith('badge')) && <span className="text-xs text-black/40 font-bold">No badges yet.</span>}
+                         </div>
+                      </div>
+                   </div>
+                </div>
+             </div>
+
+             {/* Navigation Buttons */}
              <div className="flex-grow flex flex-col items-center justify-center">
-                <h2 className="text-6xl md:text-8xl font-arcane mb-16 text-center title-main uppercase">{t.commandCenter || "COMMAND CENTER"}</h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full max-w-4xl">
-                   <button onClick={() => setView('ONBOARDING')} className="bg-white border-4 border-black p-12 neo-shadow hover:-translate-y-2 transition-all flex flex-col items-center gap-4 group">
-                      <span className="text-6xl group-hover:scale-110 transition-transform">🗺️</span>
-                      <span className="text-3xl font-black uppercase">{t.paths}</span>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full max-w-4xl">
+                   <button onClick={() => setView('ONBOARDING')} className="bg-white border-4 border-black p-8 neo-shadow hover:-translate-y-2 transition-all flex flex-col items-center gap-4 group">
+                      <span className="text-5xl group-hover:scale-110 transition-transform">🗺️</span>
+                      <span className="text-2xl font-black uppercase">{t.paths}</span>
                    </button>
-                   <button onClick={() => setView('STORE')} className="bg-white border-4 border-black p-12 neo-shadow hover:-translate-y-2 transition-all flex flex-col items-center gap-4 group">
-                      <span className="text-6xl group-hover:scale-110 transition-transform">🛒</span>
-                      <span className="text-3xl font-black uppercase">{t.store}</span>
+                   <button onClick={() => setView('STORE')} className="bg-white border-4 border-black p-8 neo-shadow hover:-translate-y-2 transition-all flex flex-col items-center gap-4 group">
+                      <span className="text-5xl group-hover:scale-110 transition-transform">🛒</span>
+                      <span className="text-2xl font-black uppercase">{t.store}</span>
                    </button>
-                   <button onClick={() => setView('PROFILE')} className="bg-white border-4 border-black p-12 neo-shadow hover:-translate-y-2 transition-all flex flex-col items-center gap-4 group">
-                      <span className="text-6xl group-hover:scale-110 transition-transform">👤</span>
-                      <span className="text-3xl font-black uppercase">{t.profile}</span>
-                   </button>
-                   <button onClick={() => setView('SETTINGS')} className="bg-white border-4 border-black p-12 neo-shadow hover:-translate-y-2 transition-all flex flex-col items-center gap-4 group">
-                      <span className="text-6xl group-hover:scale-110 transition-transform">⚙️</span>
-                      <span className="text-3xl font-black uppercase">{t.settings}</span>
+                   <button onClick={() => setView('SETTINGS')} className="bg-white border-4 border-black p-8 neo-shadow hover:-translate-y-2 transition-all flex flex-col items-center gap-4 group">
+                      <span className="text-5xl group-hover:scale-110 transition-transform">⚙️</span>
+                      <span className="text-2xl font-black uppercase">{t.settings}</span>
                    </button>
                 </div>
              </div>
@@ -1068,9 +1161,11 @@ const App: React.FC = () => {
          return (
             <div className="min-h-screen p-8 md:p-12 fade-in max-w-4xl mx-auto flex flex-col">
               <NavHeader />
-              <div className="bg-white border-2 border-black p-8 md:p-12 neo-shadow-lg">
+              <div className="bg-white border-2 border-black p-8 md:p-12 neo-shadow-lg mb-8">
                  <h2 className="text-5xl font-arcane mb-8 uppercase border-b-2 border-black pb-4">{t.settings}</h2>
-                 <div className="space-y-8">
+                 <div className="space-y-12">
+                    
+                    {/* Language */}
                     <div>
                        <label className="block text-xl font-black uppercase mb-4">{t.language}</label>
                        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
@@ -1080,28 +1175,62 @@ const App: React.FC = () => {
                                 onClick={() => setProgress(p => ({...p, language: l as Language}))}
                                 className={`p-4 border-2 border-black font-bold uppercase transition-all ${progress.language === l ? 'bg-[#90EE90] neo-shadow' : 'bg-white hover:bg-gray-50'}`}
                              >
-                                {l === 'en' ? 'English' : 
-                                 l === 'te' ? 'Telugu' :
-                                 l === 'kn' ? 'Kannada' :
-                                 l === 'ml' ? 'Malayalam' :
-                                 l === 'ta' ? 'Tamil' : 'Hindi'}
+                                {l === 'en' ? 'English' : l.toUpperCase()}
                              </button>
                           ))}
                        </div>
                     </div>
+
+                    {/* Background Music Selector */}
+                    <div>
+                        <label className="block text-xl font-black uppercase mb-4">{t.bgMusic}</label>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {STORE_ITEMS.filter(i => i.type === 'music').map(track => {
+                                const isOwned = progress.inventory.includes(track.id) || track.id === 'music_chill';
+                                const isEquipped = progress.equippedMusic === track.id;
+                                
+                                return (
+                                    <button
+                                        key={track.id}
+                                        onClick={() => isOwned && handleEquipItem(track)}
+                                        className={`p-4 border-2 border-black text-left flex justify-between items-center ${!isOwned ? 'opacity-50 cursor-not-allowed bg-gray-100' : isEquipped ? 'bg-[#90EE90] neo-shadow' : 'bg-white hover:bg-gray-50'}`}
+                                    >
+                                        <div>
+                                            <span className="font-bold block uppercase">{track.name}</span>
+                                            <span className="text-xs opacity-60">{!isOwned ? 'Locked (Buy in Store)' : isEquipped ? 'Playing' : 'Click to Equip'}</span>
+                                        </div>
+                                        {isEquipped && <span>🎵</span>}
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    </div>
                     
-                    <div className="flex items-center justify-between border-t-2 border-black pt-8">
-                       <label className="text-xl font-black uppercase">{t.notifications}</label>
-                       <button className="w-16 h-8 border-2 border-black bg-[#90EE90] rounded-full relative neo-shadow">
-                          <div className="absolute right-1 top-1 w-5 h-5 bg-black rounded-full"></div>
-                       </button>
+                    {/* Notifications */}
+                    <div>
+                       <label className="block text-xl font-black uppercase mb-4">{t.notifications}</label>
+                       <div className="border-2 border-black bg-gray-50 max-h-60 overflow-y-auto">
+                          {progress.notifications && progress.notifications.length > 0 ? (
+                            progress.notifications.map((note) => (
+                              <div key={note.id} className="p-4 border-b-2 border-black last:border-b-0 bg-white">
+                                <div className="flex justify-between items-start">
+                                  <span className="font-bold uppercase text-sm">{note.title}</span>
+                                  <span className="text-[10px] bg-black text-white px-1">{note.date}</span>
+                                </div>
+                                <p className="text-sm mt-1 opacity-70">{note.message}</p>
+                              </div>
+                            ))
+                          ) : (
+                            <div className="p-8 text-center opacity-50 font-bold uppercase">{t.noNotifs}</div>
+                          )}
+                       </div>
                     </div>
 
                     <div className="border-t-2 border-black pt-8">
                        <button onClick={handleLogout} className="text-red-500 font-black uppercase text-xl hover:underline">LOG OUT</button>
                     </div>
                  </div>
-                 <NeoButton onClick={goToHub} className="w-full mt-12 py-4 text-xl">BACK TO HUB →</NeoButton>
+                 <NeoButton onClick={goToHub} className="w-full mt-12 py-4 text-xl">BACK TO HOME →</NeoButton>
               </div>
             </div>
          );
@@ -1177,14 +1306,15 @@ const App: React.FC = () => {
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {STORE_ITEMS.map((item) => {
-                const isOwned = (progress.inventory || []).includes(item.id);
-                const isEquipped = progress.equippedBanner === item.id;
+                const isOwned = (progress.inventory || []).includes(item.id) || (item.type === 'music' && item.id === 'music_chill');
+                const isEquipped = item.type === 'banner' ? progress.equippedBanner === item.id : progress.equippedMusic === item.id;
                 const canAfford = progress.xp >= item.cost;
 
                 return (
                   <div key={item.id} className="bg-white border-2 border-black p-6 flex flex-col neo-shadow hover:-translate-y-1 transition-all">
                     <div className={`h-24 w-full border-2 border-black mb-4 flex items-center justify-center overflow-hidden relative ${item.type === 'banner' ? item.value : 'bg-gray-50'}`}>
                        {item.type === 'badge' && <span className="text-5xl">{item.value}</span>}
+                       {item.type === 'music' && <span className="text-5xl">🎵</span>}
                        {item.type === 'banner' && <span className="text-xs font-black uppercase bg-white px-2 border-2 border-black z-10">Preview</span>}
                     </div>
                     
@@ -1196,7 +1326,7 @@ const App: React.FC = () => {
                     
                     <div className="mt-auto">
                       {isOwned ? (
-                         item.type === 'banner' ? (
+                         (item.type === 'banner' || item.type === 'music') ? (
                            <button 
                              onClick={() => handleEquipItem(item)}
                              disabled={isEquipped}
@@ -1394,56 +1524,6 @@ const App: React.FC = () => {
           </div>
         );
         
-      case 'PROFILE':
-        const currentBanner = STORE_ITEMS.find(i => i.id === progress.equippedBanner);
-        return (
-          <div className="min-h-screen p-8 md:p-12 fade-in max-w-4xl mx-auto flex flex-col">
-            <NavHeader />
-            <div className="bg-white border-2 border-black p-8 neo-shadow-lg">
-              {/* Profile Banner */}
-              <div className={`w-full h-32 border-2 border-black mb-8 relative overflow-hidden ${currentBanner ? currentBanner.value : 'bg-[#90EE90]/20'}`}>
-                 <div className="absolute bottom-2 left-4 bg-white border-2 border-black px-2 py-1 text-xs font-black uppercase z-10">
-                   {currentBanner ? currentBanner.name : 'Standard Banner'}
-                 </div>
-              </div>
-
-              <h2 className="text-4xl font-arcane mb-8 uppercase border-b-2 border-black pb-4">{t.profile}</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
-                <div className="space-y-6">
-                  <div className="border-2 border-black p-6 neo-shadow bg-[#90EE90]/20">
-                    <p className="text-xs font-black uppercase text-black/40 mb-1">Current Rank</p>
-                    <p className="text-4xl font-arcane mb-2">{currentRankName}</p>
-                    <div className="h-6 w-full progress-bar-container mb-2">
-                      <div className="progress-bar-inner" style={{ width: `${rankCompletionPercentage}%` }}></div>
-                    </div>
-                    <p className="text-xs font-bold text-right">{progress.completedCategoriesForCurrentRank.length}/{categories.length} Paths Completed</p>
-                    <p className="mt-4 font-bold text-2xl">{progress.xp} XP</p>
-                  </div>
-                  <div className="border-2 border-black p-4 neo-shadow">
-                    <p className="text-xs font-black uppercase text-black/40 mb-3">Badges & Inventory</p>
-                    <div className="flex flex-wrap gap-3">
-                      {progress.badges.length > 0 ? progress.badges.map((b, i) => (
-                        <div key={i} className="bg-yellow-400 border-2 border-black p-2 neo-shadow font-bold text-xs uppercase flex items-center gap-2">🏅 {b}</div>
-                      )) : null}
-                      {/* Show Bought Badges */}
-                      {(progress.inventory || []).filter(id => id.startsWith('badge')).map((badgeId, i) => {
-                         const item = STORE_ITEMS.find(it => it.id === badgeId);
-                         return item ? (
-                           <div key={`inv_${i}`} className="bg-white border-2 border-black p-2 neo-shadow font-bold text-xs uppercase flex items-center gap-2" title={item.name}>
-                             {item.value}
-                           </div>
-                         ) : null;
-                      })}
-                      {progress.badges.length === 0 && (!progress.inventory || !progress.inventory.some(i => i.startsWith('badge'))) && <p className="font-bold text-black/30">No badges yet.</p>}
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <NeoButton onClick={goToHub} className="w-full mt-12 py-4 text-xl">BACK TO HUB →</NeoButton>
-            </div>
-          </div>
-        );
-
       default:
         return null;
     }

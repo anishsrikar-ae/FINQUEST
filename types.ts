@@ -26,6 +26,14 @@ export interface Level {
   lessons: Lesson[];
 }
 
+export interface Notification {
+  id: string;
+  title: string;
+  message: string;
+  date: string;
+  read: boolean;
+}
+
 export interface UserProgress {
   completedLessonIds: string[]; // Global history of all completed lesson IDs
   xp: number;
@@ -35,6 +43,9 @@ export interface UserProgress {
   language: 'en' | 'te' | 'kn' | 'ml' | 'ta' | 'hi'; 
   inventory: string[]; // IDs of items bought in store
   equippedBanner: string | null; // ID of the currently equipped banner
+  equippedMusic: string; // ID of the currently playing music
+  unlockedMusic: string[]; // IDs of unlocked music tracks
+  notifications: Notification[];
 }
 
 export interface Transaction {
