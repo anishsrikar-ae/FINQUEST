@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo, memo, useEffect, useRef } from 'react';
 import NeoButton from './components/NeoButton';
 import { Level, Lesson, UserProgress, Quiz, Notification } from './types';
@@ -28,11 +29,12 @@ interface StoreItem {
   value: string; // CSS class for banner, Emoji for badge, URL for music
 }
 
+// Using reliable direct MP3 sources to prevent "no supported sources" error
 const MUSIC_TRACKS: Record<string, string> = {
-  'music_chill': 'https://cdn.pixabay.com/audio/2022/05/27/audio_1808fbf07a.mp3',
-  'music_upbeat': 'https://cdn.pixabay.com/audio/2022/01/18/audio_d0a13f69d0.mp3', // Funky
-  'music_synth': 'https://cdn.pixabay.com/audio/2021/11/24/audio_c50d56c502.mp3', // Synthwave
-  'music_epic': 'https://cdn.pixabay.com/audio/2022/03/24/audio_34e0c3eb1d.mp3' // Cinematic
+  'music_chill': 'https://cdn.pixabay.com/audio/2022/02/10/audio_fc8c8d8332.mp3', 
+  'music_upbeat': 'https://cdn.pixabay.com/audio/2023/09/06/audio_97f8841443.mp3',
+  'music_synth': 'https://cdn.pixabay.com/audio/2021/11/24/audio_c50d56c502.mp3', 
+  'music_epic': 'https://cdn.pixabay.com/audio/2022/03/24/audio_34e0c3eb1d.mp3'
 };
 
 const STORE_ITEMS: StoreItem[] = [
@@ -51,10 +53,10 @@ const STORE_ITEMS: StoreItem[] = [
   { id: 'badge_rocket', name: 'To The Moon', type: 'badge', cost: 1500, description: 'No limits.', value: '🚀' },
 
   // Music
-  { id: 'music_chill', name: 'Lofi Study', type: 'music', cost: 0, description: 'Relaxing beats.', value: MUSIC_TRACKS['music_chill'] },
-  { id: 'music_upbeat', name: 'Funky Fresh', type: 'music', cost: 400, description: 'Get moving.', value: MUSIC_TRACKS['music_upbeat'] },
-  { id: 'music_synth', name: 'Neon Night', type: 'music', cost: 600, description: 'Cyberpunk vibes.', value: MUSIC_TRACKS['music_synth'] },
-  { id: 'music_epic', name: 'Grand Quest', type: 'music', cost: 800, description: 'Heroic moments.', value: MUSIC_TRACKS['music_epic'] },
+  { id: 'music_chill', name: 'Smooth Jazz', type: 'music', cost: 0, description: 'Relaxing beats.', value: MUSIC_TRACKS['music_chill'] },
+  { id: 'music_upbeat', name: 'Funky Life', type: 'music', cost: 400, description: 'Energetic vibes.', value: MUSIC_TRACKS['music_upbeat'] },
+  { id: 'music_synth', name: 'Synthwave', type: 'music', cost: 600, description: 'Retro futuristic.', value: MUSIC_TRACKS['music_synth'] },
+  { id: 'music_epic', name: 'Cinematic', type: 'music', cost: 800, description: 'Dramatic orchestral.', value: MUSIC_TRACKS['music_epic'] },
 ];
 
 const LOCALIZED_CONTENT = {
@@ -548,7 +550,7 @@ const TRANSLATIONS = {
     noNotifs: "No new notifications."
   },
   te: { start: 'కొనసాగండి', login: 'లాగిన్', signup: 'సైన్ అప్', enter: 'ప్రవేశించండి', join: 'చేరండి', username: 'యూజర్ పేరు', password: 'పాస్‌వర్డ్', paths: 'మార్గాలు', profile: 'ప్రొఫైల్', store: 'స్టోర్', choosePath: 'మీ మార్గాన్ని ఎంచుకోండి', pathDesc: 'అన్ని మార్గాలను పూర్తి చేసి తదుపరి ర్యాంక్‌కు వెళ్లండి.', progress: 'ర్యాంక్ పురోగతి', completed: 'పూర్తయింది', mastered: 'నైపుణ్యం', locked: 'లాక్ చేయబడింది', begin: 'ప్రారంభించండి', retreat: 'వెనుకకు', submit: 'సమర్పించండి', continue: 'కొనసాగించండి', backRoadmap: 'తిరిగి వెళ్ళు', reread: 'మళ్ళీ చదవండి', passed: 'ఉత్తీర్ణులయ్యారు', failed: 'విఫలమయ్యారు', xpGranted: 'XP పొందారు', tryAgain: 'మళ్ళీ ప్రయత్నించండి', level: 'ర్యాంక్', settings: 'అమరికలు', language: 'భాష', notifications: 'నోటిఫికేషన్లు', account: 'ఖాతా', resources: 'వనరులు', signupCta: "ఖాతా లేదా?", loginCta: "సభ్యులేనా?", welcome: "స్వాగతం", newHere: "కొత్తవారా?", createAccount: "ఖాతా సృష్టించు", backToLogin: "లాగిన్", pathBonus: "పూర్తయింది! +500 XP", rankUpReady: "ర్యాంక్ పరీక్ష సిద్ధంగా ఉంది", takeExam: "పరీక్ష రాయండి", examDesc: "మీ నైపుణ్యాన్ని నిరూపించుకోండి.", buy: "కొనుగోలు", equip: "ధరించండి", equipped: "ధరించారు", owned: "స్వంతం", cost: "ధర", home: "హోమ్", easy: 'సులభం', medium: 'మధ్యస్థం', hard: 'కఠినం', bgMusic: "నేపథ్య సంగీతం", noNotifs: "నోటిఫికేషన్లు లేవు." },
-  kn: { start: 'ಮುಂದುವರಿಯಿರಿ', login: 'ಲಾಗಿನ್', signup: 'ಸೈನ್ ಅಪ್', enter: 'ಪ್ರವೇಶಿಸಿ', join: 'ಸೇರಿ', username: 'ಬಳಕೆದಾರ ಹೆಸರು', password: 'ಪಾಸ್‌ವರ್ಡ್', paths: 'ಮಾರ್ಗಗಳು', profile: 'ಪ್ರೊಫైಲ್', store: 'ಅಂಗಡಿ', choosePath: 'ನಿಮ್ಮ ದಾರಿಯನ್ನು ಆರಿಸಿ', pathDesc: 'ಮುಂದಿನ ಹಂತಕ್ಕೆ ಹೋಗಲು ಎಲ್ಲಾ ಮಾರ್ಗಗಳನ್ನು ಪೂರ್ಣಗೊಳಿಸಿ.', progress: 'ಶ್ರೇಣಿ ಪ್ರಗತಿ', completed: 'ಪೂರ್ಣಗೊಂಡಿದೆ', mastered: 'ಕರಗತವಾಗಿದೆ', locked: 'ಲಾಕ್ ಆಗಿದೆ', begin: 'ಪ್ರಾರಂಭಿಸಿ', retreat: 'ಹಿಂದೆ', submit: 'ಸಲ್ಲಿಸಿ', continue: 'ಮುಂದುವರಿಸಿ', backRoadmap: 'ಹಿಂದಕ್ಕೆ', reread: 'ಮತ್ತೊಮ್ಮೆ ಓದಿ', passed: 'ಪಾಸಾಗಿದೆ', failed: 'ವಿಫಲವಾಗಿದೆ', xpGranted: 'XP ಲಭಿಸಿದೆ', tryAgain: 'ಮತ್ತೊಮ್ಮೆ ಪ್ರಯತ್ನಿಸಿ', level: 'ಹಂತ', settings: 'ಸೆಟ್ಟಿಂಗ್‌ಗಳು', language: 'ಭಾಷೆ', notifications: 'ಸೂಚನೆಗಳು', account: 'ಖಾತೆ', resources: 'ಸಂಪನ್ಮೂಲಗಳು', signupCta: "ಖಾತೆ ಇಲ್ಲವೇ?", loginCta: "ಈಗಾಗಲೇ ಸದಸ್ಯರೇ?", welcome: "ಸ್ವಾಗತ", newHere: "ಹೊಸಬರೇ?", createAccount: "ಖಾತೆ ತೆರೆಯಿರಿ", backToLogin: "ಲಾಗಿನ್", pathBonus: "ಪೂರ್ಣಗೊಂಡಿದೆ! +500 XP", rankUpReady: "ಶ್ರೇಣಿ ಪರೀಕ್ಷೆ ಅನ್‌ಲಾಕ್ ಆಗಿದೆ", takeExam: "ಪರೀಕ್ಷೆ ತೆಗೆದುಕೊ", examDesc: "ಮುಂದಿನ ಹಂತಕ್ಕೆ ಹೋಗಲು ಪರೀಕ್ಷೆ ಬರೆಯಿರಿ.", buy: "ಖರೀದಿಸಿ", equip: "ಬಳಸಿ", equipped: "ಬಳಸಲಾಗಿದೆ", owned: "ಸ್ವಂತ", cost: "ಬೆಲೆ", home: "ಹೋಮ್", easy: 'ಸುಲಭ', medium: 'ಮಧ್ಯಮ', hard: 'ಕಠಿಣ', bgMusic: "ಹಿನ್ನೆಲೆ ಸಂಗೀತ", noNotifs: "ಯಾವುದೇ ಹೊಸ ಸೂಚನೆಗಳಿಲ್ಲ." },
+  kn: { start: 'ಮುಂದುವರಿಯಿರಿ', login: 'ಲಾಗಿನ್', signup: 'ಸೈನ್ ಅಪ್', enter: 'ಪ್ರವೇಶಿಸಿ', join: 'ಸೇರಿ', username: 'ಬಳಕೆದಾರ ಹೆಸರು', password: 'ಪಾಸ್‌ವರ್ಡ್', paths: 'ಮಾರ್ಗಗಳು', profile: 'ಪ್ರೊಫೈಲ್', store: 'ಅಂಗಡಿ', choosePath: 'ನಿಮ್ಮ ದಾರಿಯನ್ನು ಆರಿಸಿ', pathDesc: 'ಮುಂದಿನ ಹಂತಕ್ಕೆ ಹೋಗಲು ಎಲ್ಲಾ ಮಾರ್ಗಗಳನ್ನು ಪೂರ್ಣಗೊಳಿಸಿ.', progress: 'ಶ್ರೇಣಿ ಪ್ರಗತಿ', completed: 'ಪೂರ್ಣಗೊಂಡಿದೆ', mastered: 'ಕರಗತವಾಗಿದೆ', locked: 'ಲಾಕ್ ಆಗಿದೆ', begin: 'ಪ್ರಾರಂಭಿಸಿ', retreat: 'ಹಿಂದೆ', submit: 'ಸಲ್ಲಿಸಿ', continue: 'ಮುಂದುವರಿಸಿ', backRoadmap: 'ಹಿಂದಕ್ಕೆ', reread: 'ಮತ್ತೊಮ್ಮೆ ಓದಿ', passed: 'ಪಾಸಾಗಿದೆ', failed: 'ವಿಫಲವಾಗಿದೆ', xpGranted: 'XP ಲಭಿಸಿದೆ', tryAgain: 'ಮತ್ತೊಮ್ಮೆ ಪ್ರಯತ್ನಿಸಿ', level: 'ಹಂತ', settings: 'ಸೆಟ್ಟಿಂಗ್‌ಗಳು', language: 'ಭಾಷೆ', notifications: 'ಸೂಚನೆಗಳು', account: 'ಖಾತೆ', resources: 'ಸಂಪನ್ಮೂಲಗಳು', signupCta: "ಖಾತೆ ಇಲ್ಲವೇ?", loginCta: "ಈಗಾಗಲೇ ಸದಸ್ಯರೇ?", welcome: "ಸ್ವಾಗತ", newHere: "ಹೊಸಬರೇ?", createAccount: "ಖಾತೆ ತೆರೆಯಿರಿ", backToLogin: "ಲಾಗಿನ್", pathBonus: "ಪೂರ್ಣಗೊಂಡಿದೆ! +500 XP", rankUpReady: "ಶ್ರೇಣಿ ಪರೀಕ್ಷೆ ಅನ್‌ಲಾಕ್ ಆಗಿದೆ", takeExam: "ಪರೀಕ್ಷೆ ತೆಗೆದುಕೊ", examDesc: "ಮುಂದಿನ ಹಂತಕ್ಕೆ ಹೋಗಲು ಪರೀಕ್ಷೆ ಬರೆಯಿರಿ.", buy: "ಖರೀದಿಸಿ", equip: "ಬಳಸಿ", equipped: "ಬಳಸಲಾಗಿದೆ", owned: "ಸ್ವಂತ", cost: "ಬೆಲೆ", home: "ಹೋಮ್", easy: 'ಸುಲಭ', medium: 'ಮಧ್ಯಮ', hard: 'ಕಠಿಣ', bgMusic: "ಹಿನ್ನೆಲೆ ಸಂಗೀತ", noNotifs: "ಯಾವುದೇ ಹೊಸ ಸೂಚನೆಗಳಿಲ್ಲ." },
   ml: { start: 'തുടരുക', login: 'ലോഗിൻ', signup: 'സൈൻ അപ്പ്', enter: 'പ്രവേശിക്കുക', join: 'ചേരുക', username: 'ഉപയോക്തൃനാമം', password: 'പാസ്‌വേഡ്', paths: 'വഴികൾ', profile: 'പ്രൊഫൈൽ', store: 'സ്റ്റോർ', choosePath: 'നിങ്ങളുടെ വഴി തിരഞ്ഞെടുക്കുക', pathDesc: 'അടുത്ത റാങ്കിലേക്ക് പോകാൻ എല്ലാ വഴികളും പൂർത്തിയാക്കുക.', progress: 'റാങ്ക് പുരോഗതി', completed: 'പൂർത്തിയായി', mastered: 'നേടി', locked: 'ലോക്ക് ചെയ്തു', begin: 'തുടങ്ങുക', retreat: 'പിന്നോട്ട്', submit: 'സമർപ്പിക്കുക', continue: 'തുടരുക', backRoadmap: 'തിരികെ', reread: 'വീണ്ടും വായിക്കുക', passed: 'വിജയിച്ചു', failed: 'പരാജയപ്പെട്ടു', xpGranted: 'XP ലഭിച്ചു', tryAgain: 'വീണ്ടും ശ്രമിക്കുക', level: 'റാങ്ക്', settings: 'ക്രമീകരണങ്ങൾ', language: 'ഭാഷ', notifications: 'അറിയിപ്പുകൾ', account: 'അക്കൗണ്ട്', resources: 'വിഭവങ്ങൾ', signupCta: "അക്കൗണ്ട് ഇല്ലേ?", loginCta: "അംഗമാണോ?", welcome: "സ്വാഗതം", newHere: "പുതിയ ആളാണോ?", createAccount: "അക്കൗണ്ട് ഉണ്ടാക്കുക", backToLogin: "ലോഗിൻ", pathBonus: "പൂർത്തിയായി! +500 XP", rankUpReady: "റാങ്ക് പരീക്ഷ തയ്യാറാണ്", takeExam: "പരീക്ഷ എഴുതുക", examDesc: "അടുത്ത റാങ്കിലേക്ക് പോകാൻ യോഗ്യത തെളിയിക്കുക.", buy: "വാങ്ങുക", equip: "ഉപയോഗിക്കുക", equipped: "ഉപയോഗിക്കുന്നു", owned: "സ്വന്തം", cost: "വില", home: "ഹോം", easy: 'ലളിതം', medium: 'ഇടത്തരം', hard: 'കഠിനം', bgMusic: "പശ്ചാത്തല സംഗീതം", noNotifs: "അറിയിപ്പുകൾ ഒന്നുമില്ല." },
   ta: { start: 'தொடரவும்', login: 'உள்நுழைக', signup: 'பதிவு', enter: 'உள்ளிடவும்', join: 'சேரவும்', username: 'பயனர்பெயர்', password: 'கடவுச்சொல்', paths: 'வழிகள்', profile: 'சுயவிவரம்', store: 'கடை', choosePath: 'உங்கள் வழியைத் தேர்வுசெய்க', pathDesc: 'அடுத்த நிலைக்குச் செல்ல அனைத்து வழிகளையும் முடிக்கவும்.', progress: 'தர முன்னேற்றம்', completed: 'முடிந்தது', mastered: 'தேர்ச்சி', locked: 'பூட்டப்பட்டது', begin: 'தொடங்கவும்', retreat: 'பின்வாங்கு', submit: 'சமர்ப்பிக்கவும்', continue: 'தொடரவும்', backRoadmap: 'திரும்பிச் செல்', reread: 'மீண்டும் படி', passed: 'தேர்ச்சி', failed: 'தோல்வி', xpGranted: 'XP வழங்கப்பட்டது', tryAgain: 'மீண்டும் முயற்சிக்கவும்', level: 'தரம்', settings: 'அமைப்புகள்', language: 'மொழி', notifications: 'அறிவிப்புகள்', account: 'கணக்கு', resources: 'வளங்கள்', signupCta: "கணக்கு இல்லையா?", loginCta: "ஏற்கனவே உறுப்பினரா?", welcome: "வரவேற்பு", newHere: "புதியவரா?", createAccount: "கணக்கை உருவாக்கு", backToLogin: "உள்நுழைக", pathBonus: "முடிந்தது! +500 XP", rankUpReady: "தேர்வு தயார்", takeExam: "தேர்வை எழுதுங்கள்", examDesc: "அடுத்த நிலைக்குச் செல்ல உங்கள் திறமையை நிரூபிக்கவும்.", buy: "வாங்க", equip: "பயன்படுத்து", equipped: "பயன்பாட்டில்", owned: "சொந்தம்", cost: "விலை", home: "முகப்பு", easy: 'எளிது', medium: 'நடுத்தரம்', hard: 'கடினம்', bgMusic: "பின்னணி இசை", noNotifs: "புதிய அறிவிப்புகள் இல்லை." },
   hi: { start: 'आगे बढ़ें', login: 'लॉग इन', signup: 'साइन अप', enter: 'प्रवेश करें', join: 'शामिल हों', username: 'यूज़रनेम', password: 'पासवर्ड', paths: 'रास्ते', profile: 'प्रोफ़ाइल', store: 'स्टोर', choosePath: 'अपना रास्ता चुनें', pathDesc: 'अगले रैंक पर जाने के लिए सभी रास्ते पूरे करें।', progress: 'रैंक प्रगति', completed: 'पूरा हुआ', mastered: 'महारत हासिल', locked: 'बंद है', begin: 'ट्रायल शुरू करें', retreat: 'पीछे हटें', submit: 'उत्तर जमा करें', continue: 'जारी रखें', backRoadmap: 'वापस जाएं', reread: 'फिर से पढ़ें', passed: 'पास', failed: 'फेल', xpGranted: 'XP मिला', tryAgain: 'फिर से कोशिश करें', level: 'रैंक', settings: 'सेटिंग्स', language: 'भाषा', notifications: 'सूचनाएं', account: 'खाता', resources: 'संसाधन', signupCta: "खाता नहीं है?", loginCta: "पहले से सदस्य हैं?", welcome: "स्वागत है", newHere: "नए हैं?", createAccount: "खाता बनाएं", backToLogin: "लॉग इन", pathBonus: "पथ पूरा हुआ! +500 XP", rankUpReady: "रैंक परीक्षा अनलॉक", takeExam: "परीक्षा दें", examDesc: "अगले रैंक पर जाने के लिए परीक्षा पास करें।", buy: "खरीदें", equip: "इस्तेमाल करें", equipped: "इस्तेमाल में", owned: "स्वामित्व", cost: "लागत", home: "होम", easy: 'आसान', medium: 'मध्यम', hard: 'कठिन', bgMusic: "पार्श्व संगीत", noNotifs: "कोई नई सूचना नहीं।" }
@@ -563,6 +565,31 @@ const GeminiStar: React.FC<{ style: React.CSSProperties }> = ({ style }) => (
     <path d="M12 2L14.5 9.5L22 12L14.5 14.5L12 22L9.5 14.5L2 12L9.5 9.5L12 2Z"/>
   </svg>
 );
+
+const Confetti: React.FC = () => {
+  const pieces = useMemo(() => Array.from({ length: 50 }).map((_, i) => ({
+    id: i,
+    left: Math.random() * 100,
+    delay: Math.random() * 0.5,
+    bg: ['#FFD700', '#90EE90', '#FF6347', '#4285F4'][Math.floor(Math.random() * 4)]
+  })), []);
+
+  return (
+    <div className="fixed inset-0 pointer-events-none z-50 overflow-hidden">
+      {pieces.map(p => (
+        <div 
+          key={p.id}
+          className="confetti-piece"
+          style={{
+            left: `${p.left}%`,
+            animation: `confetti-fall 2s ease-out forwards ${p.delay}s`,
+            backgroundColor: p.bg
+          }}
+        />
+      ))}
+    </div>
+  );
+};
 
 type ShapeElement = {
   id: string;
@@ -689,7 +716,9 @@ const DEFAULT_PROGRESS: FullUserProgress = {
   equippedBanner: 'banner_classic',
   equippedMusic: 'music_chill',
   unlockedMusic: ['music_chill'],
-  notifications: []
+  notifications: [],
+  streak: 0,
+  lastActiveDate: ''
 };
 
 const App: React.FC = () => {
@@ -699,7 +728,7 @@ const App: React.FC = () => {
   const [password, setPassword] = useState('');
   
   const [roadmap, setRoadmap] = useState<Level[]>([]);
-  const [currentCategory, setCurrentCategory] = useState('');
+  const [currentCategoryId, setCurrentCategoryId] = useState('');
   const [activeLesson, setActiveLesson] = useState<Lesson | null>(null);
   
   const [progress, setProgress] = useState<FullUserProgress>(DEFAULT_PROGRESS);
@@ -718,6 +747,7 @@ const App: React.FC = () => {
   const t = TRANSLATIONS[progress.language];
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const currentRankName = RANK_ORDER[progress.rankIndex];
+  const currentTrackIdRef = useRef<string | null>(null);
 
   // Derive categories
   const categories = useMemo(() => {
@@ -733,6 +763,10 @@ const App: React.FC = () => {
     });
   }, [progress.language]);
 
+  const currentCategoryTitle = useMemo(() => {
+    return categories.find(c => c.id === currentCategoryId)?.title || '';
+  }, [currentCategoryId, categories]);
+
   const defaultLevels = useMemo<Level[]>(() => {
     const w = LOCALIZED_CONTENT[progress.language].welcomeLesson;
     return [{
@@ -746,36 +780,42 @@ const App: React.FC = () => {
   }, [progress.language]);
 
   useEffect(() => {
-    if (!currentCategory) setRoadmap(defaultLevels);
-  }, [defaultLevels, currentCategory]);
+    if (!currentCategoryId) setRoadmap(defaultLevels);
+  }, [defaultLevels, currentCategoryId]);
 
   useEffect(() => {
-    // Initialize Audio Element
-    const audio = new Audio(MUSIC_TRACKS[progress.equippedMusic] || MUSIC_TRACKS['music_chill']); 
-    audio.loop = true;
-    audio.volume = 0.12;
-    audioRef.current = audio;
-
-    if (audioInitialized && !isMuted) {
-      audio.play().catch(e => console.error(e));
+    if (!audioRef.current) {
+      audioRef.current = new Audio();
+      audioRef.current.loop = true;
+      audioRef.current.volume = 0.12;
+      audioRef.current.crossOrigin = "anonymous";
+      audioRef.current.onerror = (e) => {
+        console.warn("Audio source failed", e);
+      };
     }
+    
+    const audio = audioRef.current;
+    const targetTrackId = progress.equippedMusic;
+    const targetUrl = MUSIC_TRACKS[targetTrackId] || MUSIC_TRACKS['music_chill'];
 
-    return () => { 
-      if (audioRef.current) { 
-        audioRef.current.pause(); 
-        audioRef.current = null; 
-      } 
-    };
-  }, [progress.equippedMusic]); // Re-run when music changes
-
-  useEffect(() => {
-    if (audioRef.current) {
-      audioRef.current.muted = isMuted;
-      if (!isMuted && audioInitialized) {
-        audioRef.current.play().catch(() => {});
+    if (currentTrackIdRef.current !== targetTrackId) {
+      audio.src = targetUrl;
+      currentTrackIdRef.current = targetTrackId;
+      if (audioInitialized && !isMuted) {
+         audio.play().catch(e => console.warn("Audio autoplay prevented", e));
       }
     }
-  }, [isMuted, audioInitialized]);
+
+    if (audioInitialized && !isMuted) {
+      if (audio.paused) {
+        audio.play().catch(e => console.warn("Audio play failed", e));
+      }
+    } else {
+      if (!audio.paused) {
+        audio.pause();
+      }
+    }
+  }, [progress.equippedMusic, audioInitialized, isMuted]);
 
   // Save Progress to LocalStorage
   useEffect(() => {
@@ -806,7 +846,7 @@ const App: React.FC = () => {
 
   const goToPaths = () => {
     setView('ONBOARDING');
-    setCurrentCategory('');
+    setCurrentCategoryId('');
     setRoadmap(defaultLevels);
     setActiveLesson(null);
     setSelectedOption(null);
@@ -816,7 +856,6 @@ const App: React.FC = () => {
      setView('HOME');
   }
 
-  // Rank Progress Calculation (Paths Completed / Total Paths)
   const rankCompletionPercentage = Math.round((progress.completedCategoriesForCurrentRank.length / categories.length) * 100);
   const isReadyForRankUp = rankCompletionPercentage === 100 && progress.rankIndex < RANK_ORDER.length - 1;
 
@@ -829,20 +868,20 @@ const App: React.FC = () => {
     return Math.round((completed / allLessons.length) * 100);
   }, [roadmap, progress.completedLessonIds]);
 
-  const isCurrentRoadmapComplete = roadmapProgress === 100 && !!currentCategory;
+  const isCurrentRoadmapComplete = roadmapProgress === 100 && !!currentCategoryId;
 
   // Mark Path as Complete for Current Rank
   useEffect(() => {
-    if (isCurrentRoadmapComplete && currentCategory && !progress.completedCategoriesForCurrentRank.includes(currentCategory)) {
+    if (isCurrentRoadmapComplete && currentCategoryId && !progress.completedCategoriesForCurrentRank.includes(currentCategoryId)) {
       setProgress(prev => ({
         ...prev,
         xp: prev.xp + 500,
-        completedCategoriesForCurrentRank: [...prev.completedCategoriesForCurrentRank, currentCategory],
-        categoryProgress: { ...prev.categoryProgress, [currentCategory]: 100 }
+        completedCategoriesForCurrentRank: [...prev.completedCategoriesForCurrentRank, currentCategoryId], // Store ID
+        categoryProgress: { ...prev.categoryProgress, [currentCategoryId]: 100 } // Store ID
       }));
-      addNotification("Path Completed!", `You have mastered ${currentCategory}.`);
+      addNotification("Path Completed!", `You have mastered this path.`);
     }
-  }, [isCurrentRoadmapComplete, currentCategory]);
+  }, [isCurrentRoadmapComplete, currentCategoryId]);
 
   const handleAuth = (e: React.FormEvent) => {
     e.preventDefault();
@@ -854,7 +893,7 @@ const App: React.FC = () => {
         try {
           const parsed = JSON.parse(savedData);
           setProgress({ ...DEFAULT_PROGRESS, ...parsed });
-          // Add default notifications if missing
+          
           if (!parsed.notifications) {
             setProgress(p => ({...p, notifications: []}));
           }
@@ -863,8 +902,7 @@ const App: React.FC = () => {
           setProgress(DEFAULT_PROGRESS);
         }
       } else {
-        // New user
-        const newProg = { ...DEFAULT_PROGRESS };
+        const newProg = { ...DEFAULT_PROGRESS, language: progress.language };
         newProg.notifications = [{
           id: 'welcome',
           title: 'Welcome!',
@@ -886,7 +924,7 @@ const App: React.FC = () => {
   };
 
   const handleSelectCategory = async (cat: Category) => {
-    setCurrentCategory(cat.title);
+    setCurrentCategoryId(cat.id);
     setView('LOADING');
     const minLoadTime = new Promise(resolve => setTimeout(resolve, 2000));
     
@@ -897,11 +935,11 @@ const App: React.FC = () => {
       ]);
       
       if (customRoadmap && customRoadmap.length > 0) {
-        const uniqueRoadmap = customRoadmap.map(level => ({
+        const uniqueRoadmap = customRoadmap.map((level, lvlIdx) => ({
           ...level,
-          lessons: level.lessons.map(lesson => ({
+          lessons: level.lessons.map((lesson, lsnIdx) => ({
             ...lesson,
-            id: `${progress.rankIndex}_${cat.id}_${lesson.id}` 
+            id: `${progress.rankIndex}_${cat.id}_l${lvlIdx}_l${lsnIdx}` 
           }))
         }));
         setRoadmap(uniqueRoadmap);
@@ -915,9 +953,34 @@ const App: React.FC = () => {
   const handleFinishQuiz = () => {
     if (activeLesson && selectedOption === activeLesson.quiz.correct) {
       setQuizSuccess(true);
+      let newXp = earnedXp;
+
+      // STREAK LOGIC
+      const today = new Date().toISOString().split('T')[0];
+      const lastActive = progress.lastActiveDate;
+      let newStreak = progress.streak || 0;
+      let bonusXp = 0;
+
+      if (lastActive !== today) {
+        const yesterday = new Date();
+        yesterday.setDate(yesterday.getDate() - 1);
+        const yesterdayStr = yesterday.toISOString().split('T')[0];
+
+        if (lastActive === yesterdayStr) {
+           newStreak += 1;
+           bonusXp = 50 + (newStreak * 10);
+           addNotification("Daily Streak!", `${newStreak} Day Streak! +${bonusXp} XP`);
+        } else {
+           newStreak = 1;
+           bonusXp = 50;
+           addNotification("Streak Started!", `First day! Come back tomorrow. +${bonusXp} XP`);
+        }
+      }
+
       if (!progress.completedLessonIds.includes(activeLesson.id)) {
-        let baseXp = 50 + (progress.rankIndex * 20); // Scale XP by Rank
-        setEarnedXp(baseXp);
+        let baseXp = 50 + (progress.rankIndex * 20); 
+        newXp = baseXp + bonusXp;
+        setEarnedXp(newXp);
         
         const allLessons = roadmap.flatMap(l => l.lessons);
         const newlyCompletedCount = allLessons.filter(l => progress.completedLessonIds.includes(l.id) || l.id === activeLesson.id).length;
@@ -926,11 +989,20 @@ const App: React.FC = () => {
         setProgress(prev => ({
           ...prev,
           completedLessonIds: [...prev.completedLessonIds, activeLesson.id],
-          xp: prev.xp + baseXp,
-          categoryProgress: { ...prev.categoryProgress, [currentCategory]: newCatProgress }
+          xp: prev.xp + newXp,
+          streak: newStreak,
+          lastActiveDate: today,
+          categoryProgress: { ...prev.categoryProgress, [currentCategoryId]: newCatProgress } 
         }));
       } else {
-        setEarnedXp(0);
+        // If replaying, update streak but no lesson XP
+        setProgress(prev => ({
+             ...prev,
+             streak: newStreak,
+             lastActiveDate: today,
+             xp: prev.xp + bonusXp
+        }));
+        setEarnedXp(bonusXp); // Only show bonus XP
       }
     } else {
       setQuizSuccess(false);
@@ -992,25 +1064,22 @@ const App: React.FC = () => {
     if (currentExamQuestionIndex < rankExamQuestions.length - 1) {
       setCurrentExamQuestionIndex(i => i + 1);
     } else {
-      // Exam Finished
       const finalScore = selectedIndex === currentQ.correct ? examScore + 1 : examScore;
       if (finalScore >= 3) {
-        // RANK UP!
         const nextRankIdx = progress.rankIndex + 1;
         const newRankName = RANK_ORDER[nextRankIdx];
         setProgress(prev => ({
           ...prev,
           rankIndex: nextRankIdx,
-          completedCategoriesForCurrentRank: [], // Reset for new rank
-          categoryProgress: {}, // Reset progress bars
-          badges: [...prev.badges, currentRankName], // Award old rank as badge
+          completedCategoriesForCurrentRank: [],
+          categoryProgress: {}, 
+          badges: [...prev.badges, currentRankName], 
           xp: prev.xp + 1000
         }));
         addNotification("Rank Up!", `You are now ${newRankName}. +1000 XP`);
         setView('RANK_SUCCESS');
       } else {
-        // Failed
-        setView('QUIZ_SUMMARY'); // Reuse summary or make custom fail screen
+        setView('QUIZ_SUMMARY');
         setQuizSuccess(false);
         setEarnedXp(0);
       }
@@ -1026,6 +1095,12 @@ const App: React.FC = () => {
         </div>
       </div>
       <div className="flex gap-3 items-center">
+        {progress.streak > 0 && (
+          <div className="flex items-center gap-1 bg-orange-100 border-2 border-black px-3 py-1 neo-shadow animate-bounce-slight" title="Daily Streak">
+            <span className="text-lg">🔥</span>
+            <span className="font-black text-orange-600">{progress.streak}</span>
+          </div>
+        )}
         <button onClick={() => setIsMuted(!isMuted)} className="p-2 border-2 border-black neo-shadow bg-white hover:bg-gray-100 transition-colors">{isMuted ? '🔈' : '🔊'}</button>
         <NeoButton variant="secondary" onClick={() => setView('STORE')} className="text-xs py-1.5 px-3">{t.store}</NeoButton>
         <NeoButton variant="secondary" onClick={() => setView('ONBOARDING')} className="text-xs py-1.5 px-3">{t.paths}</NeoButton>
@@ -1252,8 +1327,8 @@ const App: React.FC = () => {
 
             <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 w-full pb-12 ${isReadyForRankUp ? 'opacity-50 pointer-events-none' : ''}`}>
               {categories.map((cat) => {
-                const isMastered = progress.completedCategoriesForCurrentRank.includes(cat.title);
-                const catPerc = progress.categoryProgress[cat.title] || 0;
+                const isMastered = progress.completedCategoriesForCurrentRank.includes(cat.id);
+                const catPerc = progress.categoryProgress[cat.id] || 0;
 
                 return (
                   <button 
@@ -1416,7 +1491,8 @@ const App: React.FC = () => {
           <div className={`min-h-screen p-8 md:p-12 fade-in max-w-4xl mx-auto transition-colors duration-300 ${isCurrentRoadmapComplete ? 'completed-theme' : ''}`}>
             {isCurrentRoadmapComplete && (
               <div className="fixed inset-0 z-50 flex items-center justify-center roadmap-completed-overlay">
-                 <div className="bg-[#90EE90] border-8 border-black p-12 neo-shadow-lg text-center rotate-[-2deg] fade-in max-w-lg">
+                 <Confetti />
+                 <div className="bg-[#90EE90] border-8 border-black p-12 neo-shadow-lg text-center rotate-[-2deg] fade-in max-w-lg z-10">
                     <h2 className="text-6xl font-arcane mb-4 uppercase text-black">{t.mastered}</h2>
                     <p className="text-xl font-bold mb-2 text-black">{t.pathBonus}</p>
                     <NeoButton onClick={goToPaths} className="text-2xl py-4 mt-8">{t.choosePath} →</NeoButton>
@@ -1426,7 +1502,7 @@ const App: React.FC = () => {
             <NavHeader />
             <div className="mb-12 border-2 border-black p-8 neo-shadow bg-white/60 backdrop-blur-md">
               <div className="flex justify-between items-center mb-4">
-                <h3 className="text-2xl font-black uppercase tracking-tight">{currentCategory} ({currentRankName})</h3>
+                <h3 className="text-2xl font-black uppercase tracking-tight">{currentCategoryTitle} ({currentRankName})</h3>
                 <span className="text-4xl font-arcane text-[#90EE90] drop-shadow-[2px_2px_0_rgba(0,0,0,1)]">{roadmapProgress}%</span>
               </div>
               <div className="h-10 w-full progress-bar-container">
@@ -1450,7 +1526,11 @@ const App: React.FC = () => {
                         <button key={lesson.id} disabled={!isAccessible} onClick={() => { setActiveLesson(lesson); setView('LESSON'); }} className={`p-6 border-2 border-black text-left relative transition-all ${isAccessible ? 'bg-white neo-shadow hover:-translate-y-2' : 'bg-gray-200 opacity-50 cursor-not-allowed'} ${isCompleted ? 'bg-[#90EE90]/20' : ''}`}>
                           <div className="flex justify-between items-start mb-3">
                             <span className="text-xs font-black uppercase tracking-widest text-black/40">Task {currentIdx + 1}</span>
-                            {isCompleted && <span className="text-xs bg-black text-[#90EE90] px-2 py-1 font-bold uppercase">{t.mastered}</span>}
+                            {isCompleted && (
+                              <div className="absolute top-2 right-2 pop-in">
+                                <span className="text-2xl">✅</span>
+                              </div>
+                            )}
                           </div>
                           <h4 className="text-2xl font-bold uppercase leading-tight">{lesson.title}</h4>
                           {!isAccessible && <div className="absolute inset-0 flex items-center justify-center bg-black/5 backdrop-blur-[1px]"><span className="text-5xl">🔒</span></div>}
@@ -1512,7 +1592,8 @@ const App: React.FC = () => {
       case 'QUIZ_SUMMARY':
         return (
           <div className="min-h-screen p-8 md:p-12 fade-in max-w-2xl mx-auto flex flex-col justify-center">
-            <div className={`bg-white border-8 border-black p-12 neo-shadow-lg text-center ${quizSuccess ? 'rotate-[1deg]' : 'rotate-[-1deg]'}`}>
+            {quizSuccess && <Confetti />}
+            <div className={`bg-white border-8 border-black p-12 neo-shadow-lg text-center relative z-10 ${quizSuccess ? 'rotate-[1deg]' : 'rotate-[-1deg]'}`}>
               <div className="mb-8">{quizSuccess ? <div className="text-9xl mb-4">✨</div> : <div className="text-9xl mb-4">💀</div>}</div>
               <h2 className="text-6xl font-arcane mb-4 uppercase">{quizSuccess ? t.passed : t.failed}</h2>
               <p className="text-2xl font-bold mb-8 uppercase">{quizSuccess ? `${t.xpGranted} (+${earnedXp} XP)` : t.tryAgain}</p>

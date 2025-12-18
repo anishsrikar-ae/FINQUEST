@@ -46,6 +46,8 @@ export interface UserProgress {
   equippedMusic: string; // ID of the currently playing music
   unlockedMusic: string[]; // IDs of unlocked music tracks
   notifications: Notification[];
+  streak: number;
+  lastActiveDate: string; // ISO Date string YYYY-MM-DD
 }
 
 export interface Transaction {
