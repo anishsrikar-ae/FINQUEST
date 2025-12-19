@@ -29,12 +29,12 @@ interface StoreItem {
   value: string; // CSS class for banner, Emoji for badge, URL for music
 }
 
-// Using reliable direct MP3 sources to prevent "no supported sources" error
+// Using reliable direct MP3 sources from Pixabay
 const MUSIC_TRACKS: Record<string, string> = {
-  'music_chill': 'https://cdn.pixabay.com/audio/2022/02/10/audio_fc8c8d8332.mp3', 
-  'music_upbeat': 'https://cdn.pixabay.com/audio/2023/09/06/audio_97f8841443.mp3',
-  'music_synth': 'https://cdn.pixabay.com/audio/2021/11/24/audio_c50d56c502.mp3', 
-  'music_epic': 'https://cdn.pixabay.com/audio/2022/03/24/audio_34e0c3eb1d.mp3'
+  'music_chill': 'https://cdn.pixabay.com/audio/2022/05/27/audio_1808fbf07a.mp3', // Lofi Study
+  'music_upbeat': 'https://cdn.pixabay.com/audio/2023/06/13/audio_4e1d4e4128.mp3', // Upbeat Pop
+  'music_synth': 'https://cdn.pixabay.com/audio/2022/03/10/audio_55a90d9931.mp3', // Synthwave 80s
+  'music_epic': 'https://cdn.pixabay.com/audio/2022/08/04/audio_2dde668d05.mp3' // Cinematic Epic
 };
 
 const STORE_ITEMS: StoreItem[] = [
@@ -53,8 +53,8 @@ const STORE_ITEMS: StoreItem[] = [
   { id: 'badge_rocket', name: 'To The Moon', type: 'badge', cost: 1500, description: 'No limits.', value: '🚀' },
 
   // Music
-  { id: 'music_chill', name: 'Smooth Jazz', type: 'music', cost: 0, description: 'Relaxing beats.', value: MUSIC_TRACKS['music_chill'] },
-  { id: 'music_upbeat', name: 'Funky Life', type: 'music', cost: 400, description: 'Energetic vibes.', value: MUSIC_TRACKS['music_upbeat'] },
+  { id: 'music_chill', name: 'Lofi Study', type: 'music', cost: 0, description: 'Relaxing beats.', value: MUSIC_TRACKS['music_chill'] },
+  { id: 'music_upbeat', name: 'Upbeat Pop', type: 'music', cost: 400, description: 'Energetic vibes.', value: MUSIC_TRACKS['music_upbeat'] },
   { id: 'music_synth', name: 'Synthwave', type: 'music', cost: 600, description: 'Retro futuristic.', value: MUSIC_TRACKS['music_synth'] },
   { id: 'music_epic', name: 'Cinematic', type: 'music', cost: 800, description: 'Dramatic orchestral.', value: MUSIC_TRACKS['music_epic'] },
 ];
@@ -295,7 +295,7 @@ const LOCALIZED_CONTENT = {
       { 
         id: 'digital-payments', 
         title: '3. ഡിಜಿറ്റൽ പേയ്മെന്റുകൾ', 
-        description: 'ഭയമില്ലാതെ ദൈനംദിന ഡിജിറ്റൽ പണ ഉപയോഗം. UPI-യും സുരക്ഷിതമായ കൈമാറ്റങ്ങളും പഠിക്കുക.',
+        description: 'ഭയമില്ലാതെ ദൈനംദിന ഡിಜಿറ്റൽ പണ ഉപയോഗം. UPI-യും സുരക്ഷിതമായ കൈമാറ്റങ്ങളും പഠിക്കുക.',
         topics: {
           level1: "3.1 യുപിഐ എങ്ങനെ പ്രവർത്തിക്കുന്നു",
           level2: "3.2 പണമിടപാടുകൾ (UPI vs NEFT)",
@@ -926,11 +926,12 @@ const App: React.FC = () => {
   const handleSelectCategory = async (cat: Category) => {
     setCurrentCategoryId(cat.id);
     setView('LOADING');
-    const minLoadTime = new Promise(resolve => setTimeout(resolve, 2000));
+    // Reduced load time to 800ms for snappier feel
+    const minLoadTime = new Promise(resolve => setTimeout(resolve, 800));
     
     try {
       const [customRoadmap] = await Promise.all([
-        generateCustomRoadmap(cat.title, cat.difficulty, cat.topics, progress.language, currentRankName),
+        generateCustomRoadmap(cat.id, cat.difficulty, cat.topics, progress.language, currentRankName),
         minLoadTime
       ]);
       
